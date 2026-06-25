@@ -5,7 +5,7 @@ import { useState } from 'react'
 type Props = {
   type: 'school' | 'personal'
   onClose: () => void
-  onAdd: (event: { title: string; subtitle: string }) => void
+  onAdd: (event: { title: string; sub: string }) => void
 }
 
 export default function AddEventModal({ type, onClose, onAdd }: Props) {
@@ -17,8 +17,8 @@ export default function AddEventModal({ type, onClose, onAdd }: Props) {
 
   const handleAdd = () => {
     if (!title.trim()) return
-    const subtitle = [date, time, 'Added by you'].filter(Boolean).join(' · ')
-    onAdd({ title, subtitle })
+    const sub = [date, time, 'Added by you'].filter(Boolean).join(' · ')
+    onAdd({ title, sub })
   }
 
   return (

@@ -1,18 +1,54 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession, signIn, signOut } from 'next-auth/react'
 import AddEventModal from './AddEventModal'
 
-const fixed = [
-  { title: 'Gym', sub: '6:00 pm · Added by you', badge: 'Today', badgeStyle: { background: '#E1F5EE', color: '#0F6E56' }, accent: '#0F6E56', section: 'today' },
-  { title: 'Soccer practice', sub: '5:00 pm · Google Calendar', badge: 'Today', badgeStyle: { background: '#E6F1FB', color: '#185FA5' }, accent: '#185FA5', section: 'today' },
-  { title: 'Hang out with friends', sub: 'Friday · 4:00 pm · Added by you', badge: '3 days', badgeStyle: { background: '#E1F5EE', color: '#0F6E56' }, accent: '#0F6E56', section: 'week' },
-  { title: "Family dinner at grandma's", sub: 'Sunday · Google Calendar', badge: '5 days', badgeStyle: { background: '#E6F1FB', color: '#185FA5' }, accent: '#185FA5', section: 'week' },
-]
+type Event = { title: string; date: string; location: string }
+
+function daysUntil(dateStr: string) {
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const then = new Date(dateStr)
+  then.setHours(0, 0, 0, 0)
+  return Math.ceil((then.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function badgeLabel(days: number) {
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Tomorrow'
+  return `${days} days`
+}
+
+function badgeStyle(days: number): React.CSSProperties {
+  if (days <= 1) return { background: '#E1F5EE', color: '#0F6E56' }
+  if (days <= 3) return { background: '#FAEEDA', color: '#854F0B' }
+  return { background: '#E6F1FB', color: '#185FA5' }
+}
+
+const sectionLabel: React.CSSProperties = {
+  fontSize: 11, fontWeight: 600, color: '#aaa',
+  textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px'
+}
 
 export default function PersonalTab() {
+  const { data: session } = useSession()
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [added, setAdded] = useState<{ title: string; sub: string }[]>([])
+
+  useEffect(() => {
+    if (!session) return
+    setLoading(true)
+    fetch('/api/calendar')
+      .then(r => r.json())
+      .then(data => { setEvents(data.events || []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [session])
+
+  const today = events.filter(e => daysUntil(e.date) === 0)
+  const week = events.filter(e => daysUntil(e.date) > 0)
 
   return (
     <div>
@@ -25,16 +61,50 @@ export default function PersonalTab() {
       </div>
 
       <div style={{ padding: 16 }}>
-        <p style={sectionLabel}>Today</p>
-        {fixed.filter(e => e.section === 'today').map((e, i) => <EventCard key={i} {...e} />)}
+        {!session ? (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <p style={{ color: '#555', fontSize: 14, marginBottom: 16 }}>Connect Google Calendar to see your events</p>
+            <button onClick={() => signIn('google')} style={{ background: '#1a3a2e', color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+              Sign in with Google
+            </button>
+          </div>
+        ) : (
+          <>
+            {loading && <p style={{ color: '#aaa', fontSize: 14 }}>Loading your calendar...</p>}
 
-        <p style={sectionLabel}>This week</p>
-        {fixed.filter(e => e.section === 'week').map((e, i) => <EventCard key={i} {...e} />)}
-        {added.map((e, i) => <EventCard key={i} title={e.title} sub={e.sub} badge="Added" badgeStyle={{ background: '#E1F5EE', color: '#0F6E56' }} accent="#0F6E56" />)}
+            {!loading && today.length > 0 && <>
+              <p style={sectionLabel}>Today</p>
+              {today.map((e, i) => <EventCard key={i} event={e} />)}
+            </>}
 
-        <button onClick={() => setShowModal(true)} style={{ width: '100%', padding: '13px', background: '#1a3a2e', color: 'white', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 500, cursor: 'pointer', marginTop: 4 }}>
-          + Add personal event
-        </button>
+            {!loading && week.length > 0 && <>
+              <p style={sectionLabel}>This week</p>
+              {week.map((e, i) => <EventCard key={i} event={e} />)}
+            </>}
+
+            {!loading && events.length === 0 && (
+              <p style={{ color: '#aaa', fontSize: 14 }}>No upcoming events in the next 2 weeks.</p>
+            )}
+
+            {added.map((e, i) => (
+              <div key={i} style={{ background: 'white', border: '1px solid #eee', borderLeft: '3px solid #0F6E56', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: '#111', margin: 0 }}>{e.title}</p>
+                  <p style={{ fontSize: 12, color: '#999', margin: '3px 0 0' }}>{e.sub}</p>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 8, background: '#E1F5EE', color: '#0F6E56' }}>Added</span>
+              </div>
+            ))}
+
+            <button onClick={() => setShowModal(true)} style={{ width: '100%', padding: '13px', background: '#1a3a2e', color: 'white', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 500, cursor: 'pointer', marginTop: 8 }}>
+              + Add personal event
+            </button>
+
+            <button onClick={() => signOut()} style={{ width: '100%', padding: '10px', background: 'transparent', color: '#aaa', border: '1px solid #eee', borderRadius: 12, fontSize: 12, cursor: 'pointer', marginTop: 8 }}>
+              Sign out of Google
+            </button>
+          </>
+        )}
       </div>
 
       {showModal && <AddEventModal type="personal" onClose={() => setShowModal(false)} onAdd={e => { setAdded(p => [...p, e]); setShowModal(false) }} />}
@@ -42,16 +112,18 @@ export default function PersonalTab() {
   )
 }
 
-const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }
+function EventCard({ event }: { event: Event }) {
+  const days = daysUntil(event.date)
+  const date = new Date(event.date)
+  const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 
-function EventCard({ title, sub, badge, badgeStyle, accent }: { title: string; sub: string; badge: string; badgeStyle: React.CSSProperties; accent: string }) {
   return (
-    <div style={{ background: 'white', border: '1px solid #eee', borderLeft: `3px solid ${accent}`, borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ background: 'white', border: '1px solid #eee', borderLeft: '3px solid #0F6E56', borderRadius: 12, padding: '12px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <div>
-        <p style={{ fontSize: 14, fontWeight: 500, color: '#111', margin: 0 }}>{title}</p>
-        <p style={{ fontSize: 12, color: '#999', margin: '3px 0 0' }}>{sub}</p>
+        <p style={{ fontSize: 14, fontWeight: 500, color: '#111', margin: 0 }}>{event.title}</p>
+        <p style={{ fontSize: 12, color: '#999', margin: '3px 0 0' }}>{dateStr} · Google Calendar</p>
       </div>
-      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 8, marginLeft: 8, whiteSpace: 'nowrap', ...badgeStyle }}>{badge}</span>
+      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 8, marginLeft: 8, whiteSpace: 'nowrap', ...badgeStyle(days) }}>{badgeLabel(days)}</span>
     </div>
   )
 }

@@ -1,13 +1,59 @@
-const emails = [
-  { from: 'Mr. Johnson', subject: 'Extra credit opportunity', preview: "Hi class, I'm offering extra credit for anyone who...", time: '9:14 am', badge: 'Extra credit', badgeStyle: { background: '#FAEEDA', color: '#854F0B' }, read: false },
-  { from: 'Ms. Rivera', subject: 'History essay updated rubric', preview: 'Please use the updated rubric attached for your...', time: 'Yesterday', badge: 'Action needed', badgeStyle: { background: '#FCEBEB', color: '#A32D2D' }, read: false },
-  { from: 'Mr. Kim', subject: 'Math test reminder', preview: 'Just a reminder that your test is on Wednesday...', time: 'Mon', badge: 'Reminder', badgeStyle: { background: '#E6F1FB', color: '#185FA5' }, read: true },
-  { from: 'Principal Davis', subject: 'School newsletter — June', preview: "This month's updates from Cupertino High...", time: 'Sun', badge: 'Info', badgeStyle: { background: '#F1EFE8', color: '#5F5E5A' }, read: true },
-]
+'use client'
+import { useEffect, useState } from 'react'
 
-const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }
+interface Email {
+  id: string
+  from: string
+  subject: string
+  date: string
+  unread: boolean
+  snippet: string
+}
+
+const sectionLabel: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  color: '#aaa',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  margin: '0 0 8px',
+}
+
+function formatFrom(from: string) {
+  const match = from.match(/^"?([^"<]+)"?\s*</)
+  return match ? match[1].trim() : from.split('@')[0]
+}
+
+function formatDate(dateStr: string) {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  if (days === 0) return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return date.toLocaleDateString([], { weekday: 'short' })
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+}
 
 export default function InboxTab() {
+  const [emails, setEmails] = useState<Email[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetch('/api/gmail')
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) setError(data.error)
+        else setEmails(data.emails || [])
+      })
+      .catch(() => setError('Failed to load emails'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const unread = emails.filter(e => e.unread)
+  const read = emails.filter(e => !e.unread)
+
   return (
     <div>
       <div style={{ background: '#1a1a2e', padding: '20px 20px 16px', color: 'white' }}>
@@ -16,26 +62,42 @@ export default function InboxTab() {
       </div>
 
       <div style={{ padding: 16 }}>
-        <p style={sectionLabel}>Unread</p>
-        {emails.filter(e => !e.read).map((e, i) => <EmailCard key={i} {...e} />)}
+        {loading && <p style={{ color: '#aaa', fontSize: 14 }}>Loading emails...</p>}
+        {error && <p style={{ color: 'red', fontSize: 14 }}>{error}</p>}
 
-        <p style={sectionLabel}>Earlier</p>
-        {emails.filter(e => e.read).map((e, i) => <EmailCard key={i} {...e} />)}
+        {!loading && !error && (
+          <>
+            {unread.length > 0 && (
+              <>
+                <p style={sectionLabel}>Unread</p>
+                {unread.map(e => <EmailCard key={e.id} {...e} />)}
+              </>
+            )}
+            {read.length > 0 && (
+              <>
+                <p style={sectionLabel}>Earlier</p>
+                {read.map(e => <EmailCard key={e.id} {...e} />)}
+              </>
+            )}
+            {emails.length === 0 && (
+              <p style={{ color: '#aaa', fontSize: 14 }}>No emails found.</p>
+            )}
+          </>
+        )}
       </div>
     </div>
   )
 }
 
-function EmailCard({ from, subject, preview, time, badge, badgeStyle, read }: { from: string; subject: string; preview: string; time: string; badge: string; badgeStyle: React.CSSProperties; read: boolean }) {
+function EmailCard({ from, subject, date, unread, snippet }: Email) {
   return (
     <div style={{ background: 'white', border: '1px solid #eee', borderRadius: 12, padding: '14px', marginBottom: 8 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <p style={{ fontSize: 14, fontWeight: read ? 400 : 600, color: '#111', margin: 0 }}>{from}</p>
-        <p style={{ fontSize: 11, color: '#aaa', margin: 0 }}>{time}</p>
+        <p style={{ fontSize: 14, fontWeight: unread ? 600 : 400, color: '#111', margin: 0 }}>{formatFrom(from)}</p>
+        <p style={{ fontSize: 11, color: '#aaa', margin: 0 }}>{formatDate(date)}</p>
       </div>
-      <p style={{ fontSize: 13, color: read ? '#999' : '#333', margin: '0 0 4px' }}>{subject}</p>
-      <p style={{ fontSize: 12, color: '#bbb', margin: '0 0 10px' }}>{preview}</p>
-      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 8, ...badgeStyle }}>{badge}</span>
+      <p style={{ fontSize: 13, color: unread ? '#333' : '#999', margin: '0 0 4px' }}>{subject}</p>
+      <p style={{ fontSize: 12, color: '#bbb', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{snippet}</p>
     </div>
   )
 }

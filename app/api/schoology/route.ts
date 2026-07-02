@@ -4,7 +4,7 @@ const ICAL_URL = 'https://fuhsd.schoology.com/calendar/feed/ical/1782351675/dcfa
 
 function parseIcal(text: string) {
   const events = []
-  const blocks = text.split('BEGIN:VEVENT')
+  const blocks = text.replace(/\r\n/g, '\n').split('BEGIN:VEVENT')
   for (let i = 1; i < blocks.length; i++) {
     const block = blocks[i]
     const summary = block.match(/SUMMARY:(.*)/)?.[1]?.trim() || 'Untitled'
@@ -21,10 +21,12 @@ function parseIcal(text: string) {
 
     const now = new Date()
     now.setHours(0, 0, 0, 0)
+    const twoWeeksAgo = new Date()
+    twoWeeksAgo.setDate(now.getDate() - 14)
     const twoWeeksOut = new Date()
-    twoWeeksOut.setDate(now.getDate() + 14)
+    twoWeeksOut.setDate(now.getDate() + 30)
 
-    if (date >= now && date <= twoWeeksOut) {
+    if (date >= twoWeeksAgo && date <= twoWeeksOut) {
       events.push({ title: summary, date: date.toISOString(), description })
     }
   }

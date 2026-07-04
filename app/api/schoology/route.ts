@@ -13,11 +13,21 @@ function parseIcal(text: string) {
     if (!dtstart) continue
 
     // Parse date like 20260625 or 20260625T080000Z
-    const raw = dtstart.replace(/[TZ]/g, '').slice(0, 8)
+    const isUtc = dtstart.endsWith('Z')
+    const hasTime = dtstart.includes('T')
+    const raw = dtstart.replace(/[TZ]/g, '')
     const year = parseInt(raw.slice(0, 4))
     const month = parseInt(raw.slice(4, 6)) - 1
     const day = parseInt(raw.slice(6, 8))
-    const date = new Date(year, month, day)
+    const hour = hasTime ? parseInt(raw.slice(8, 10)) : 0
+    const minute = hasTime ? parseInt(raw.slice(10, 12)) : 0
+    const second = hasTime ? parseInt(raw.slice(12, 14)) || 0 : 0
+
+    const date = !hasTime
+      ? new Date(year, month, day)
+      : isUtc
+        ? new Date(Date.UTC(year, month, day, hour, minute, second))
+        : new Date(year, month, day, hour, minute, second)
 
     const now = new Date()
     now.setHours(0, 0, 0, 0)
@@ -27,7 +37,10 @@ function parseIcal(text: string) {
     twoWeeksOut.setDate(now.getDate() + 30)
 
     if (date >= twoWeeksAgo && date <= twoWeeksOut) {
-      events.push({ title: summary, date: date.toISOString(), description })
+      const dateOut = hasTime
+        ? date.toISOString()
+        : `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      events.push({ title: summary, date: dateOut, description })
     }
   }
   return events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())

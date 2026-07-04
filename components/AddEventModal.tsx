@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { headerColors } from '@/lib/theme'
 
 type Props = {
   type: 'school' | 'personal'
@@ -31,13 +32,13 @@ export default function AddEventModal({ type, onClose, onAdd }: Props) {
         <div className="grid grid-cols-2 gap-2 mb-4">
           <button onClick={() => setSelectedType('school')}
             className="rounded-xl py-3 text-center transition-all"
-            style={{ background: selectedType === 'school' ? '#1a1a2e' : '#f9f9f9', color: selectedType === 'school' ? 'white' : '#888' }}>
+            style={{ background: selectedType === 'school' ? headerColors.navy : '#f9f9f9', color: selectedType === 'school' ? 'white' : '#888' }}>
             <p className="text-lg mb-1">🎓</p>
             <p className="text-sm font-medium">School</p>
           </button>
           <button onClick={() => setSelectedType('personal')}
             className="rounded-xl py-3 text-center transition-all"
-            style={{ background: selectedType === 'personal' ? '#1a3a2e' : '#f9f9f9', color: selectedType === 'personal' ? 'white' : '#888' }}>
+            style={{ background: selectedType === 'personal' ? headerColors.green : '#f9f9f9', color: selectedType === 'personal' ? 'white' : '#888' }}>
             <p className="text-lg mb-1">👤</p>
             <p className="text-sm font-medium">Personal</p>
           </button>
@@ -66,7 +67,7 @@ export default function AddEventModal({ type, onClose, onAdd }: Props) {
 
         <button onClick={handleAdd}
           className="w-full py-3 rounded-xl text-sm font-medium text-white"
-          style={{ background: selectedType === 'school' ? '#1a1a2e' : '#1a3a2e' }}>
+          style={{ background: selectedType === 'school' ? headerColors.navy : headerColors.green }}>
           Add to {selectedType === 'school' ? 'School' : 'Personal'} tab
         </button>
       </div>

@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-xl flex flex-col" style={{ minHeight: '780px' }}>
-        <div className="flex-1 overflow-y-auto">
+        <div key={activeTab} className="flex-1 overflow-y-auto tab-transition">
           {activeTab === 'today' && <TodayTab />}
           {activeTab === 'school' && <SchoolTab />}
           {activeTab === 'personal' && <PersonalTab />}

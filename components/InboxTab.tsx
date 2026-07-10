@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useSession, signIn } from 'next-auth/react'
 import { colors, headerColors, badge as badgeColors, sectionLabelStyle, cardStyle } from '@/lib/theme'
 
 interface Email {
@@ -28,11 +29,14 @@ function formatDate(dateStr: string) {
 }
 
 export default function InboxTab() {
+  const { data: session } = useSession()
   const [emails, setEmails] = useState<Email[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!session) return
+    setLoading(true)
     fetch('/api/gmail')
       .then(r => r.json())
       .then(data => {
@@ -41,7 +45,7 @@ export default function InboxTab() {
       })
       .catch(() => setError('Failed to load emails'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [session])
 
   const unread = emails.filter(e => e.unread)
   const read = emails.filter(e => !e.unread)
@@ -54,25 +58,36 @@ export default function InboxTab() {
       </div>
 
       <div style={{ padding: 16 }}>
-        {loading && <p style={{ color: colors.textSecondary, fontSize: 14 }}>Loading emails...</p>}
-        {error && <p style={{ color: badgeColors.red.color, fontSize: 14 }}>{error}</p>}
-
-        {!loading && !error && (
+        {!session ? (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <p style={{ color: '#555', fontSize: 14, marginBottom: 16 }}>Connect Gmail to see emails that matter to you</p>
+            <button onClick={() => signIn('google')} style={{ background: headerColors.navy, color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+              Sign in with Google
+            </button>
+          </div>
+        ) : (
           <>
-            {unread.length > 0 && (
+            {loading && <p style={{ color: colors.textSecondary, fontSize: 14 }}>Loading emails...</p>}
+            {error && <p style={{ color: badgeColors.red.color, fontSize: 14 }}>{error}</p>}
+
+            {!loading && !error && (
               <>
-                <p style={sectionLabelStyle}>Unread</p>
-                {unread.map(e => <EmailCard key={e.id} {...e} />)}
+                {unread.length > 0 && (
+                  <>
+                    <p style={sectionLabelStyle}>Unread</p>
+                    {unread.map(e => <EmailCard key={e.id} {...e} />)}
+                  </>
+                )}
+                {read.length > 0 && (
+                  <>
+                    <p style={sectionLabelStyle}>Earlier</p>
+                    {read.map(e => <EmailCard key={e.id} {...e} />)}
+                  </>
+                )}
+                {emails.length === 0 && (
+                  <p style={{ color: colors.textSecondary, fontSize: 14 }}>No emails found.</p>
+                )}
               </>
-            )}
-            {read.length > 0 && (
-              <>
-                <p style={sectionLabelStyle}>Earlier</p>
-                {read.map(e => <EmailCard key={e.id} {...e} />)}
-              </>
-            )}
-            {emails.length === 0 && (
-              <p style={{ color: colors.textSecondary, fontSize: 14 }}>No emails found.</p>
             )}
           </>
         )}

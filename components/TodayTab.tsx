@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { colors, headerColors, badge as badgeColors, sectionLabelStyle, cardStyle } from '@/lib/theme'
+import { loadSettings, defaultChecklist } from '@/lib/settingsStorage'
+
+const CHECKLIST_ITEMS = [
+  { key: 'studied', label: 'Studied today?', icon: '📖' },
+  { key: 'workedOut', label: 'Worked out today?', icon: '🏃' },
+  { key: 'packed', label: 'Bag packed for tomorrow?', icon: '🎒' },
+] as const
 
 type TimeOfDay = 'morning' | 'afternoon' | 'night'
 
@@ -51,11 +58,14 @@ export default function TodayTab() {
   const [assignments, setAssignments] = useState<any[]>([])
   const [emails, setEmails] = useState<any[]>([])
   const [checklist, setChecklist] = useState({ studied: null as boolean | null, workedOut: null as boolean | null, packed: null as boolean | null })
+  const [enabledChecklist, setEnabledChecklist] = useState(defaultChecklist)
+  const checklistItems = CHECKLIST_ITEMS.filter(item => enabledChecklist[item.key])
 
   useEffect(() => {
     fetch('/api/calendar').then(r => r.json()).then(d => setEvents(d.events || []))
     fetch('/api/schoology').then(r => r.json()).then(d => setAssignments(d.events || []))
     fetch('/api/gmail').then(r => r.json()).then(d => setEmails((d.emails || []).filter((e: any) => e.unread)))
+    loadSettings().then(({ nightlyChecklist }) => setEnabledChecklist(nightlyChecklist))
   }, [])
 
   useEffect(() => {
@@ -136,12 +146,20 @@ export default function TodayTab() {
         )}
 
         {/* Night checklist */}
-        {time === 'night' && (<>
+        {time === 'night' && checklistItems.length > 0 && (<>
           <p style={sectionLabelStyle}>Nightly checklist</p>
           <div style={{ border: `1px solid ${colors.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-            <ChecklistRow label="Studied today?" icon="📖" val={checklist.studied} onYes={() => toggle('studied', true)} onNo={() => toggle('studied', false)} />
-            <ChecklistRow label="Worked out today?" icon="🏃" val={checklist.workedOut} onYes={() => toggle('workedOut', true)} onNo={() => toggle('workedOut', false)} />
-            <ChecklistRow label="Bag packed for tomorrow?" icon="🎒" val={checklist.packed} onYes={() => toggle('packed', true)} onNo={() => toggle('packed', false)} last />
+            {checklistItems.map((item, i) => (
+              <ChecklistRow
+                key={item.key}
+                label={item.label}
+                icon={item.icon}
+                val={checklist[item.key]}
+                onYes={() => toggle(item.key, true)}
+                onNo={() => toggle(item.key, false)}
+                last={i === checklistItems.length - 1}
+              />
+            ))}
           </div>
 
           {upcomingAssignments.length > 0 && (<>

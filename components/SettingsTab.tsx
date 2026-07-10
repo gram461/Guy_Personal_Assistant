@@ -1,11 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { colors, headerColors, sectionLabelStyle } from '@/lib/theme'
+import {
+  loadSettings,
+  saveNotificationSettings,
+  saveNightlyChecklistSettings,
+  defaultNotifications,
+  defaultChecklist,
+  type NotificationSettings,
+  type NightlyChecklistSettings,
+} from '@/lib/settingsStorage'
 
 export default function SettingsTab() {
-  const [notifs, setNotifs] = useState({ morning: true, afternoon: true, night: true })
-  const [checklist, setChecklist] = useState({ studied: true, workedOut: true, packed: true })
+  const { data: session } = useSession()
+  const [notifs, setNotifs] = useState(defaultNotifications)
+  const [checklist, setChecklist] = useState(defaultChecklist)
+
+  useEffect(() => {
+    loadSettings().then(({ notifications, nightlyChecklist }) => {
+      setNotifs(notifications)
+      setChecklist(nightlyChecklist)
+    })
+  }, [])
+
+  const toggleNotif = (key: keyof NotificationSettings) => {
+    setNotifs(prev => {
+      const next = { ...prev, [key]: !prev[key] }
+      saveNotificationSettings(next)
+      return next
+    })
+  }
+
+  const toggleChecklist = (key: keyof NightlyChecklistSettings) => {
+    setChecklist(prev => {
+      const next = { ...prev, [key]: !prev[key] }
+      saveNightlyChecklistSettings(next)
+      return next
+    })
+  }
 
   return (
     <div>
@@ -27,25 +61,25 @@ export default function SettingsTab() {
         {/* Notifications */}
         <p style={sectionLabelStyle}>Notifications</p>
         <div style={{ background: 'white', border: `1px solid ${colors.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-          <ToggleRow label="Morning summary" sub="7:00 am" checked={notifs.morning} onChange={() => setNotifs(p => ({ ...p, morning: !p.morning }))} />
-          <ToggleRow label="Afternoon check-in" sub="3:30 pm" checked={notifs.afternoon} onChange={() => setNotifs(p => ({ ...p, afternoon: !p.afternoon }))} />
-          <ToggleRow label="Night reminder" sub="9:00 pm" checked={notifs.night} onChange={() => setNotifs(p => ({ ...p, night: !p.night }))} last />
+          <ToggleRow label="Morning summary" sub="7:00 am" checked={notifs.morning} onChange={() => toggleNotif('morning')} />
+          <ToggleRow label="Afternoon check-in" sub="3:30 pm" checked={notifs.afternoon} onChange={() => toggleNotif('afternoon')} />
+          <ToggleRow label="Night reminder" sub="9:00 pm" checked={notifs.night} onChange={() => toggleNotif('night')} last />
         </div>
 
         {/* Nightly checklist */}
         <p style={sectionLabelStyle}>Nightly checklist</p>
         <div style={{ background: 'white', border: `1px solid ${colors.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-          <ToggleRow label="Ask if I studied" checked={checklist.studied} onChange={() => setChecklist(p => ({ ...p, studied: !p.studied }))} />
-          <ToggleRow label="Ask if I worked out" checked={checklist.workedOut} onChange={() => setChecklist(p => ({ ...p, workedOut: !p.workedOut }))} />
-          <ToggleRow label="Ask if bag is packed" checked={checklist.packed} onChange={() => setChecklist(p => ({ ...p, packed: !p.packed }))} last />
+          <ToggleRow label="Ask if I studied" checked={checklist.studied} onChange={() => toggleChecklist('studied')} />
+          <ToggleRow label="Ask if I worked out" checked={checklist.workedOut} onChange={() => toggleChecklist('workedOut')} />
+          <ToggleRow label="Ask if bag is packed" checked={checklist.packed} onChange={() => toggleChecklist('packed')} last />
         </div>
 
         {/* Connected accounts */}
         <p style={sectionLabelStyle}>Connected accounts</p>
         <div style={{ background: 'white', border: `1px solid ${colors.border}`, borderRadius: 12, overflow: 'hidden' }}>
-          <AccountRow icon="🎓" label="Schoology" />
-          <AccountRow icon="✉️" label="Gmail" />
-          <AccountRow icon="📅" label="Google Calendar" last />
+          <AccountRow icon="🎓" label="Schoology" connected />
+          <AccountRow icon="✉️" label="Gmail" connected={!!session} />
+          <AccountRow icon="📅" label="Google Calendar" connected={!!session} last />
         </div>
       </div>
     </div>
@@ -66,14 +100,14 @@ function ToggleRow({ label, sub, checked, onChange, last }: { label: string; sub
   )
 }
 
-function AccountRow({ icon, label, last }: { icon: string; label: string; last?: boolean }) {
+function AccountRow({ icon, label, connected, last }: { icon: string; label: string; connected: boolean; last?: boolean }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 16px', borderBottom: last ? 'none' : `1px solid ${colors.border}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 18 }}>{icon}</span>
         <p style={{ fontSize: 14, color: colors.textPrimary, margin: 0 }}>{label}</p>
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, color: '#15803d' }}>Connected</span>
+      <span style={{ fontSize: 12, fontWeight: 600, color: connected ? '#15803d' : '#A32D2D' }}>{connected ? 'Connected' : 'Not connected'}</span>
     </div>
   )
 }

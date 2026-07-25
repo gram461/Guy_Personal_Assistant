@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
+    "firebase": "^12.16.0",
+    "firebase-admin": "^14.2.0",
     "next": "^15.5.20",
     "next-auth": "^4.24.14",
     "node-ical": "^0.26.1",

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { colors, headerColors, badge as badgeColors, sectionLabelStyle, cardStyle } from '@/lib/theme'
 import { loadSettings, defaultChecklist } from '@/lib/settingsStorage'
+import { daysUntil, filterTodaySummary } from '@/lib/summaryFilters'
 
 const CHECKLIST_ITEMS = [
   { key: 'studied', label: 'Studied today?', icon: '📖' },
@@ -21,12 +22,6 @@ function getTimeOfDay(): TimeOfDay {
 
 function formatDate() {
   return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-}
-
-function daysUntil(dateStr: string) {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const target = new Date(dateStr); target.setHours(0, 0, 0, 0)
-  return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 }
 
 function formatEventTime(dateStr: string) {
@@ -76,10 +71,7 @@ export default function TodayTab() {
   const toggle = (key: keyof typeof checklist, val: boolean) =>
     setChecklist(prev => ({ ...prev, [key]: prev[key] === val ? null : val }))
 
-  const todayEvents = events.filter(e => daysUntil(e.date) === 0)
-  const upcomingEvents = events.filter(e => daysUntil(e.date) > 0 && daysUntil(e.date) <= 7)
-  const upcomingAssignments = assignments.filter(a => daysUntil(a.date) >= 0 && daysUntil(a.date) <= 7)
-  const urgentItems = [...upcomingAssignments, ...upcomingEvents].filter(i => daysUntil(i.date) <= 1)
+  const { todayEvents, upcomingEvents, upcomingAssignments, urgentItems } = filterTodaySummary(events, assignments)
 
   return (
     <div>

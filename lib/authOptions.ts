@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import { saveGoogleRefreshToken } from './googleTokenRefresh'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -19,6 +20,9 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account }) {
       if (account) {
         token.accessToken = account.access_token
+        if (account.refresh_token) {
+          await saveGoogleRefreshToken(account.refresh_token)
+        }
       }
       return token
     },

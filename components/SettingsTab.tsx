@@ -12,18 +12,37 @@ import {
   type NotificationSettings,
   type NightlyChecklistSettings,
 } from '@/lib/settingsStorage'
+import { requestPushToken } from '@/lib/firebaseClient'
+import { savePushToken } from '@/lib/pushTokens'
+
+type PushState = 'unsupported' | 'default' | 'granted' | 'denied'
 
 export default function SettingsTab() {
   const { data: session } = useSession()
   const [notifs, setNotifs] = useState(defaultNotifications)
   const [checklist, setChecklist] = useState(defaultChecklist)
+  const [pushState, setPushState] = useState<PushState>('default')
+  const [pushBusy, setPushBusy] = useState(false)
 
   useEffect(() => {
     loadSettings().then(({ notifications, nightlyChecklist }) => {
       setNotifs(notifications)
       setChecklist(nightlyChecklist)
     })
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPushState(Notification.permission)
+    } else {
+      setPushState('unsupported')
+    }
   }, [])
+
+  const enablePush = async () => {
+    setPushBusy(true)
+    const token = await requestPushToken()
+    if (token) await savePushToken(token)
+    setPushState(typeof Notification !== 'undefined' ? Notification.permission : 'denied')
+    setPushBusy(false)
+  }
 
   const toggleNotif = (key: keyof NotificationSettings) => {
     setNotifs(prev => {
@@ -61,6 +80,23 @@ export default function SettingsTab() {
         {/* Notifications */}
         <p style={sectionLabelStyle}>Notifications</p>
         <div style={{ background: 'white', border: `1px solid ${colors.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 16px', borderBottom: `1px solid ${colors.border}` }}>
+            <div>
+              <p style={{ fontSize: 14, color: colors.textPrimary, margin: 0 }}>Push notifications on this device</p>
+              <p style={{ fontSize: 12, color: colors.textSecondary, margin: '2px 0 0' }}>
+                {pushState === 'granted' ? 'Enabled' : pushState === 'denied' ? 'Blocked in browser settings' : pushState === 'unsupported' ? 'Not supported on this browser' : 'Not enabled yet'}
+              </p>
+            </div>
+            {pushState !== 'granted' && pushState !== 'unsupported' && (
+              <button
+                onClick={enablePush}
+                disabled={pushBusy || pushState === 'denied'}
+                style={{ fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: 'none', background: headerColors.navy, color: 'white', cursor: pushState === 'denied' ? 'default' : 'pointer', opacity: pushState === 'denied' ? 0.5 : 1 }}
+              >
+                {pushBusy ? 'Enabling...' : 'Enable'}
+              </button>
+            )}
+          </div>
           <ToggleRow label="Morning summary" sub="7:00 am" checked={notifs.morning} onChange={() => toggleNotif('morning')} />
           <ToggleRow label="Afternoon check-in" sub="3:30 pm" checked={notifs.afternoon} onChange={() => toggleNotif('afternoon')} />
           <ToggleRow label="Night reminder" sub="9:00 pm" checked={notifs.night} onChange={() => toggleNotif('night')} last />

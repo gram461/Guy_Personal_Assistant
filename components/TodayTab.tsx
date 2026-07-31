@@ -54,6 +54,7 @@ export default function TodayTab() {
   const [emails, setEmails] = useState<any[]>([])
   const [checklist, setChecklist] = useState({ studied: null as boolean | null, workedOut: null as boolean | null, packed: null as boolean | null })
   const [enabledChecklist, setEnabledChecklist] = useState(defaultChecklist)
+  const [morningSummary, setMorningSummary] = useState<string | null>(null)
   const checklistItems = CHECKLIST_ITEMS.filter(item => enabledChecklist[item.key])
 
   useEffect(() => {
@@ -62,6 +63,14 @@ export default function TodayTab() {
     fetch('/api/gmail').then(r => r.json()).then(d => setEmails((d.emails || []).filter((e: any) => e.unread)))
     loadSettings().then(({ nightlyChecklist }) => setEnabledChecklist(nightlyChecklist))
   }, [])
+
+  useEffect(() => {
+    if (time !== 'morning') return
+    fetch('/api/morning-summary')
+      .then(r => r.json())
+      .then(d => setMorningSummary(d.summary || null))
+      .catch(() => {})
+  }, [time])
 
   useEffect(() => {
     const id = setInterval(() => setTime(getTimeOfDay()), 60 * 1000)
@@ -79,11 +88,17 @@ export default function TodayTab() {
         <p style={{ fontSize: 12, opacity: 0.6, margin: '0 0 2px' }}>{formatDate()}</p>
         <p style={{ fontSize: 20, fontWeight: 500, margin: '0 0 12px' }}>{greetings[time]}</p>
         <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: '12px 14px', marginBottom: 12 }}>
-          <p style={{ fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-            {upcomingAssignments.length === 0 && todayEvents.length === 0
-              ? 'No assignments or events coming up. Enjoy your day.'
-              : `You have ${upcomingAssignments.length} assignment${upcomingAssignments.length !== 1 ? 's' : ''} and ${todayEvents.length} event${todayEvents.length !== 1 ? 's' : ''} today.`}
-          </p>
+          {time === 'morning' ? (
+            <p style={{ fontSize: 13, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+              {morningSummary || 'Getting your day ready...'}
+            </p>
+          ) : (
+            <p style={{ fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+              {upcomingAssignments.length === 0 && todayEvents.length === 0
+                ? 'No assignments or events coming up. Enjoy your day.'
+                : `You have ${upcomingAssignments.length} assignment${upcomingAssignments.length !== 1 ? 's' : ''} and ${todayEvents.length} event${todayEvents.length !== 1 ? 's' : ''} today.`}
+            </p>
+          )}
         </div>
       </div>
 

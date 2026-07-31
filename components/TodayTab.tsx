@@ -1,17 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { colors, headerColors, badge as badgeColors, sectionLabelStyle, cardStyle } from '@/lib/theme'
+import { AlertTriangle, Backpack, BookOpen, CalendarCheck, Dumbbell, GraduationCap, Mail } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { loadSettings, defaultChecklist } from '@/lib/settingsStorage'
 import { daysUntil, filterTodaySummary } from '@/lib/summaryFilters'
+import { GreetingHeader, type TimeOfDay } from '@/components/dashboard/greeting-header'
+import { StatusSummary } from '@/components/dashboard/status-summary'
+import { AlertCard } from '@/components/dashboard/alert-card'
+import { ListCard } from '@/components/dashboard/list-card'
+import { SectionHeading } from '@/components/dashboard/section-heading'
+import { Tag } from '@/components/dashboard/tag'
 
 const CHECKLIST_ITEMS = [
-  { key: 'studied', label: 'Studied today?', icon: '📖' },
-  { key: 'workedOut', label: 'Worked out today?', icon: '🏃' },
-  { key: 'packed', label: 'Bag packed for tomorrow?', icon: '🎒' },
+  { key: 'studied', label: 'Studied today?', icon: BookOpen },
+  { key: 'workedOut', label: 'Worked out today?', icon: Dumbbell },
+  { key: 'packed', label: 'Bag packed for tomorrow?', icon: Backpack },
 ] as const
-
-type TimeOfDay = 'morning' | 'afternoon' | 'night'
 
 function getTimeOfDay(): TimeOfDay {
   const hour = new Date().getHours()
@@ -35,16 +40,10 @@ function timePrefix(dateStr: string) {
   return dateStr.includes('T') ? `${formatEventTime(dateStr)} · ` : ''
 }
 
-const greetings = {
-  morning: 'Good morning, Guy',
-  afternoon: 'Good afternoon, Guy',
-  night: 'Good evening, Guy',
-}
-
-const headerBg = {
-  morning: headerColors.navy,
-  afternoon: headerColors.green,
-  night: headerColors.night,
+function daysTag(days: number) {
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Tomorrow'
+  return `${days} days`
 }
 
 export default function TodayTab() {
@@ -81,129 +80,194 @@ export default function TodayTab() {
     setChecklist(prev => ({ ...prev, [key]: prev[key] === val ? null : val }))
 
   const { todayEvents, upcomingEvents, upcomingAssignments, urgentItems } = filterTodaySummary(events, assignments)
+  const morningParagraphs = morningSummary ? morningSummary.split('\n\n') : ['Getting your day ready...']
 
   return (
     <div>
-      <div style={{ background: headerBg[time], padding: '20px 20px 16px', color: 'white' }}>
-        <p style={{ fontSize: 12, opacity: 0.6, margin: '0 0 2px' }}>{formatDate()}</p>
-        <p style={{ fontSize: 20, fontWeight: 500, margin: '0 0 12px' }}>{greetings[time]}</p>
-        <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: '12px 14px', marginBottom: 12 }}>
-          {time === 'morning' ? (
-            <p style={{ fontSize: 13, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-              {morningSummary || 'Getting your day ready...'}
-            </p>
-          ) : (
-            <p style={{ fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-              {upcomingAssignments.length === 0 && todayEvents.length === 0
-                ? 'No assignments or events coming up. Enjoy your day.'
-                : `You have ${upcomingAssignments.length} assignment${upcomingAssignments.length !== 1 ? 's' : ''} and ${todayEvents.length} event${todayEvents.length !== 1 ? 's' : ''} today.`}
-            </p>
-          )}
-        </div>
-      </div>
+      <GreetingHeader name="Guy" timeOfDay={time} dateLabel={formatDate()} />
 
-      <div style={{ padding: '16px' }}>
+      <div className="space-y-3.5 p-4">
+        <StatusSummary
+          timeOfDay={time}
+          assignments={upcomingAssignments.length}
+          events={todayEvents.length}
+          paragraphs={morningParagraphs}
+        />
+
         {/* Urgent alerts */}
         {urgentItems.map((item, i) => (
-          <div key={i} style={{ background: badgeColors.red.background, border: '1px solid #F7C1C1', borderRadius: 12, padding: '12px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
-            <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#501313', margin: 0 }}>{item.title}</p>
-              <p style={{ fontSize: 12, color: badgeColors.red.color, margin: '2px 0 0' }}>
-                {daysUntil(item.date) === 0 ? 'Due today' : 'Due tomorrow'}
-              </p>
-            </div>
-          </div>
+          <AlertCard
+            key={i}
+            icon={AlertTriangle}
+            tone="urgent"
+            title={item.title}
+            subtitle={daysUntil(item.date) === 0 ? 'Due today' : 'Due tomorrow'}
+            tag={daysUntil(item.date) === 0 ? 'Today' : 'Tomorrow'}
+          />
         ))}
 
         {/* Unread emails alert */}
         {emails.length > 0 && time !== 'night' && (
-          <div style={{ background: badgeColors.amber.background, border: '1px solid #F0D28A', borderRadius: 12, padding: '12px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 18 }}>✉️</span>
-            <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#5a3a00', margin: 0 }}>{emails.length} unread email{emails.length !== 1 ? 's' : ''}</p>
-              <p style={{ fontSize: 12, color: badgeColors.amber.color, margin: '2px 0 0' }}>{emails[0]?.subject}</p>
-            </div>
-          </div>
+          <AlertCard
+            icon={Mail}
+            tone="warning"
+            title={`${emails.length} unread email${emails.length !== 1 ? 's' : ''}`}
+            subtitle={emails[0]?.subject || ''}
+            tag={`${emails.length} new`}
+          />
         )}
 
         {/* Today's events */}
-        {time !== 'night' && todayEvents.length > 0 && (<>
-          <p style={sectionLabelStyle}>Today</p>
-          {todayEvents.map((e, i) => (
-            <EventCard key={i} title={e.title} sub={`${formatEventTime(e.date)} · Google Calendar`} badge="Today" badgeStyle={badgeColors.blue} />
-          ))}
-        </>)}
+        {time !== 'night' && todayEvents.length > 0 && (
+          <section aria-labelledby="today-heading">
+            <SectionHeading title="Today" />
+            <div id="today-heading" className="space-y-2.5">
+              {todayEvents.map((e, i) => (
+                <ListCard
+                  key={i}
+                  icon={CalendarCheck}
+                  iconTone="brand"
+                  title={e.title}
+                  subtitle={`${formatEventTime(e.date)} · Google Calendar`}
+                  right={<Tag tone="brand">Today</Tag>}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Coming up */}
-        {time !== 'night' && (upcomingEvents.length > 0 || upcomingAssignments.length > 0) && (<>
-          <p style={sectionLabelStyle}>Coming up</p>
-          {upcomingAssignments.map((a, i) => {
-            const days = daysUntil(a.date)
-            return <EventCard key={i} title={a.title} sub={`${timePrefix(a.date)}Schoology · ${days === 1 ? 'tomorrow' : `${days} days`}`} badge={days === 1 ? 'Tomorrow' : `${days} days`} badgeStyle={days <= 2 ? badgeColors.red : badgeColors.amber} accent={days <= 2 ? badgeColors.red.accent : badgeColors.amber.accent} />
-          })}
-          {upcomingEvents.map((e, i) => {
-            const days = daysUntil(e.date)
-            return <EventCard key={i} title={e.title} sub={`${timePrefix(e.date)}Google Calendar · ${days === 1 ? 'tomorrow' : `${days} days`}`} badge={days === 1 ? 'Tomorrow' : `${days} days`} badgeStyle={badgeColors.blue} accent={badgeColors.blue.accent} />
-          })}
-        </>)}
+        {time !== 'night' && (upcomingEvents.length > 0 || upcomingAssignments.length > 0) && (
+          <section aria-labelledby="coming-heading">
+            <SectionHeading title="Coming up" />
+            <div id="coming-heading" className="space-y-2.5">
+              {upcomingAssignments.map((a, i) => {
+                const days = daysUntil(a.date)
+                const tone = days <= 2 ? 'urgent' : 'warning'
+                return (
+                  <ListCard
+                    key={i}
+                    icon={GraduationCap}
+                    iconTone={tone}
+                    accentEdge={tone}
+                    title={a.title}
+                    subtitle={`${timePrefix(a.date)}Schoology · ${days === 1 ? 'tomorrow' : `${days} days`}`}
+                    right={<Tag tone={tone}>{daysTag(days)}</Tag>}
+                  />
+                )
+              })}
+              {upcomingEvents.map((e, i) => {
+                const days = daysUntil(e.date)
+                return (
+                  <ListCard
+                    key={i}
+                    icon={CalendarCheck}
+                    iconTone="brand"
+                    accentEdge="brand"
+                    title={e.title}
+                    subtitle={`${timePrefix(e.date)}Google Calendar · ${days === 1 ? 'tomorrow' : `${days} days`}`}
+                    right={<Tag tone="brand">{daysTag(days)}</Tag>}
+                  />
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         {time !== 'night' && todayEvents.length === 0 && upcomingEvents.length === 0 && upcomingAssignments.length === 0 && (
-          <p style={{ color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginTop: 32 }}>Nothing coming up this week.</p>
+          <p className="px-1 py-10 text-center text-sm text-muted-foreground">Nothing coming up this week.</p>
         )}
 
         {/* Night checklist */}
-        {time === 'night' && checklistItems.length > 0 && (<>
-          <p style={sectionLabelStyle}>Nightly checklist</p>
-          <div style={{ border: `1px solid ${colors.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-            {checklistItems.map((item, i) => (
-              <ChecklistRow
-                key={item.key}
-                label={item.label}
-                icon={item.icon}
-                val={checklist[item.key]}
-                onYes={() => toggle(item.key, true)}
-                onNo={() => toggle(item.key, false)}
-                last={i === checklistItems.length - 1}
-              />
-            ))}
-          </div>
+        {time === 'night' && checklistItems.length > 0 && (
+          <section aria-labelledby="checklist-heading">
+            <SectionHeading title="Nightly checklist" />
+            <div id="checklist-heading" className="overflow-hidden rounded-2xl bg-card">
+              {checklistItems.map((item, i) => (
+                <div key={item.key}>
+                  {i > 0 ? <div className="h-px bg-border/60" /> : null}
+                  <ChecklistRow
+                    label={item.label}
+                    icon={item.icon}
+                    val={checklist[item.key]}
+                    onYes={() => toggle(item.key, true)}
+                    onNo={() => toggle(item.key, false)}
+                  />
+                </div>
+              ))}
+            </div>
 
-          {upcomingAssignments.length > 0 && (<>
-            <p style={sectionLabelStyle}>Due soon</p>
-            {upcomingAssignments.map((a, i) => {
-              const days = daysUntil(a.date)
-              return <EventCard key={i} title={a.title} sub={`${timePrefix(a.date)}Schoology · ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : `${days} days`}`} badge={days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days`} badgeStyle={days <= 1 ? badgeColors.red : badgeColors.amber} accent={days <= 1 ? badgeColors.red.accent : badgeColors.amber.accent} />
-            })}
-          </>)}
-        </>)}
+            {upcomingAssignments.length > 0 && (
+              <div className="mt-7">
+                <SectionHeading title="Due soon" />
+                <div className="space-y-2.5">
+                  {upcomingAssignments.map((a, i) => {
+                    const days = daysUntil(a.date)
+                    const tone = days <= 1 ? 'urgent' : 'warning'
+                    return (
+                      <ListCard
+                        key={i}
+                        icon={GraduationCap}
+                        iconTone={tone}
+                        accentEdge={tone}
+                        title={a.title}
+                        subtitle={`${timePrefix(a.date)}Schoology · ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : `${days} days`}`}
+                        right={<Tag tone={tone}>{days === 0 ? 'Today' : daysTag(days)}</Tag>}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   )
 }
 
-function EventCard({ title, sub, badge, badgeStyle, accent }: { title: string; sub: string; badge: string; badgeStyle: React.CSSProperties; accent?: string }) {
+function ChecklistRow({
+  label,
+  icon: Icon,
+  val,
+  onYes,
+  onNo,
+}: {
+  label: string
+  icon: typeof BookOpen
+  val: boolean | null
+  onYes: () => void
+  onNo: () => void
+}) {
   return (
-    <div style={{ ...cardStyle, borderLeft: accent ? `3px solid ${accent}` : `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 500, color: colors.textPrimary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</p>
-        <p style={{ fontSize: 12, color: colors.textSecondary, margin: '3px 0 0' }}>{sub}</p>
+    <div className="flex items-center justify-between gap-3 p-4">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground/80">
+          <Icon className="size-[18px]" strokeWidth={2.25} aria-hidden="true" />
+        </div>
+        <p className="truncate text-sm font-semibold text-card-foreground">{label}</p>
       </div>
-      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 8, marginLeft: 8, whiteSpace: 'nowrap', ...badgeStyle }}>{badge}</span>
-    </div>
-  )
-}
-
-function ChecklistRow({ label, icon, val, onYes, onNo, last }: { label: string; icon: string; val: boolean | null; onYes: () => void; onNo: () => void; last?: boolean }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: last ? 'none' : `1px solid ${colors.border}` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span>{icon}</span>
-        <p style={{ fontSize: 14, color: '#222', margin: 0 }}>{label}</p>
-      </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={onYes} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 8, border: '1px solid', borderColor: val === true ? '#86efac' : '#e5e5e5', background: val === true ? '#dcfce7' : 'transparent', color: val === true ? '#15803d' : colors.textSecondary, cursor: 'pointer' }}>Yes</button>
-        <button onClick={onNo} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 8, border: '1px solid', borderColor: val === false ? '#fca5a5' : '#e5e5e5', background: val === false ? '#fee2e2' : 'transparent', color: val === false ? '#b91c1c' : colors.textSecondary, cursor: 'pointer' }}>No</button>
+      <div className="flex shrink-0 gap-2">
+        <button
+          type="button"
+          onClick={onYes}
+          className={cn(
+            'rounded-lg px-3 py-1.5 text-xs font-bold transition-colors',
+            val === true ? 'bg-success/20 text-success' : 'bg-secondary text-muted-foreground hover:text-foreground',
+          )}
+        >
+          Yes
+        </button>
+        <button
+          type="button"
+          onClick={onNo}
+          className={cn(
+            'rounded-lg px-3 py-1.5 text-xs font-bold transition-colors',
+            val === false ? 'bg-urgent-muted text-urgent-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground',
+          )}
+        >
+          No
+        </button>
       </div>
     </div>
   )

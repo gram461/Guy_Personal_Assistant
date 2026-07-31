@@ -1,9 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import AddEventModal from './AddEventModal'
-import { colors, headerColors, badge as badgeColors, sectionLabelStyle, cardStyle } from '@/lib/theme'
+import { GraduationCap, Plus } from 'lucide-react'
 import { daysUntil } from '@/lib/summaryFilters'
+import { ScreenHeader } from '@/components/dashboard/screen-header'
+import { ListCard } from '@/components/dashboard/list-card'
+import { SectionHeading } from '@/components/dashboard/section-heading'
+import { Tag } from '@/components/dashboard/tag'
+import { AddAssignmentSheet, type NewAssignment } from '@/components/dashboard/add-assignment-sheet'
 
 type Event = { title: string; date: string; description: string }
 
@@ -18,23 +22,17 @@ function badgeLabel(days: number) {
   return `${days} days`
 }
 
-function badgeStyle(days: number): React.CSSProperties {
-  if (days <= 1) return badgeColors.red
-  if (days <= 3) return badgeColors.amber
-  return badgeColors.blue
-}
-
-function accentColor(days: number) {
-  if (days <= 1) return badgeColors.red.accent
-  if (days <= 3) return badgeColors.amber.accent
-  return badgeColors.blue.accent
+function tone(days: number): 'urgent' | 'warning' | 'brand' {
+  if (days <= 1) return 'urgent'
+  if (days <= 3) return 'warning'
+  return 'brand'
 }
 
 export default function SchoolTab() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [showModal, setShowModal] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [added, setAdded] = useState<{ title: string; sub: string }[]>([])
 
   useEffect(() => {
@@ -51,63 +49,96 @@ export default function SchoolTab() {
   const soon = events.filter(e => daysUntil(e.date) <= 2)
   const week = events.filter(e => daysUntil(e.date) > 2)
 
+  function addManualAssignment({ title, description, dueDate }: NewAssignment) {
+    setAdded(prev => [...prev, { title, sub: description || 'Added by you' }])
+  }
+
   return (
     <div>
-      <div style={{ background: headerColors.navy, padding: '20px 20px 16px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <p style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>School</p>
-          <p style={{ fontSize: 13, opacity: 0.6, margin: '4px 0 0' }}>Live from Schoology</p>
-        </div>
-        <button onClick={() => setShowModal(true)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-      </div>
+      <ScreenHeader title="School" subtitle="Live from Schoology" />
 
-      <div style={{ padding: 16 }}>
-        {loading && <p style={{ color: colors.textSecondary, fontSize: 14 }}>Loading your Schoology assignments...</p>}
-        {error && <p style={{ color: badgeColors.red.color, fontSize: 14 }}>{error}</p>}
+      <div className="space-y-2.5 p-4">
+        {loading && <p className="px-1 py-10 text-center text-sm text-muted-foreground">Loading your Schoology assignments...</p>}
+        {error && <p className="px-1 py-10 text-center text-sm font-medium text-urgent">{error}</p>}
 
-        {!loading && !error && (<>
-          {soon.length > 0 && <>
-            <p style={sectionLabelStyle}>Today & tomorrow</p>
-            {soon.map((e, i) => <EventCard key={i} event={e} />)}
-          </>}
+        {!loading && !error && (
+          <>
+            {soon.length > 0 && (
+              <section aria-labelledby="soon-heading">
+                <SectionHeading title="Today & tomorrow" />
+                <div id="soon-heading" className="space-y-2.5">
+                  {soon.map((e, i) => <AssignmentCard key={i} event={e} />)}
+                </div>
+              </section>
+            )}
 
-          {week.length > 0 && <>
-            <p style={sectionLabelStyle}>This week</p>
-            {week.map((e, i) => <EventCard key={i} event={e} />)}
-          </>}
+            {week.length > 0 && (
+              <section aria-labelledby="week-heading" className="mt-7">
+                <SectionHeading title="This week" />
+                <div id="week-heading" className="space-y-2.5">
+                  {week.map((e, i) => <AssignmentCard key={i} event={e} />)}
+                </div>
+              </section>
+            )}
 
-          {events.length === 0 && <p style={{ color: colors.textSecondary, fontSize: 14 }}>No upcoming assignments in the next 2 weeks.</p>}
-        </>)}
+            {events.length === 0 && added.length === 0 && (
+              <p className="px-1 py-10 text-center text-sm text-muted-foreground">No upcoming assignments in the next 2 weeks.</p>
+            )}
+          </>
+        )}
 
-        {added.map((e, i) => (
-          <div key={i} style={{ ...cardStyle, borderLeft: `3px solid ${badgeColors.blue.accent}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <p style={{ fontSize: 14, fontWeight: 500, color: colors.textPrimary, margin: 0 }}>{e.title}</p>
-              <p style={{ fontSize: 12, color: colors.textSecondary, margin: '3px 0 0' }}>{e.sub}</p>
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 8, ...badgeColors.blue }}>Added</span>
+        {added.length > 0 && (
+          <div className="mt-7 space-y-2.5">
+            {added.map((e, i) => (
+              <ListCard
+                key={i}
+                icon={GraduationCap}
+                iconTone="brand"
+                accentEdge="brand"
+                title={e.title}
+                subtitle={e.sub}
+                right={<Tag tone="brand">Added</Tag>}
+              />
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
-      {showModal && <AddEventModal type="school" onClose={() => setShowModal(false)} onAdd={e => { setAdded(p => [...p, e]); setShowModal(false) }} />}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md">
+        <button
+          type="button"
+          onClick={() => setSheetOpen(true)}
+          aria-label="Add assignment"
+          className="pointer-events-auto absolute bottom-24 right-4 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95"
+        >
+          <Plus className="size-7" strokeWidth={2.5} aria-hidden="true" />
+        </button>
+      </div>
+
+      <AddAssignmentSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onSubmit={addManualAssignment}
+      />
     </div>
   )
 }
 
-function EventCard({ event }: { event: Event }) {
+function AssignmentCard({ event }: { event: Event }) {
   const days = daysUntil(event.date)
   const date = new Date(event.date)
   const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
   const time = formatTime(event.date)
+  const t = tone(days)
 
   return (
-    <div style={{ ...cardStyle, borderLeft: `3px solid ${accentColor(days)}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div>
-        <p style={{ fontSize: 14, fontWeight: 500, color: colors.textPrimary, margin: 0 }}>{event.title}</p>
-        <p style={{ fontSize: 12, color: colors.textSecondary, margin: '3px 0 0' }}>{dateStr} · {time || 'All day'} · Schoology</p>
-      </div>
-      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 8, marginLeft: 8, whiteSpace: 'nowrap', ...badgeStyle(days) }}>{badgeLabel(days)}</span>
-    </div>
+    <ListCard
+      icon={GraduationCap}
+      iconTone={t}
+      accentEdge={t}
+      title={event.title}
+      subtitle={`${dateStr} · ${time || 'All day'} · Schoology`}
+      right={<Tag tone={t}>{badgeLabel(days)}</Tag>}
+    />
   )
 }

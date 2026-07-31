@@ -1,22 +1,83 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-urgent: var(--urgent);
+  --color-urgent-foreground: var(--urgent-foreground);
+  --color-urgent-muted: var(--urgent-muted);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  --color-success: var(--success);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-muted: var(--brand-muted);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Personal assistant "Today" dashboard palette — dark, Linear/Cash App inspired,
+   with one punchy violet-blue accent plus semantic status colors. Always-dark app. */
+:root {
+  color-scheme: dark;
+  --background: oklch(0.16 0.012 285);
+  --foreground: oklch(0.98 0.004 285);
+  --card: oklch(0.216 0.016 285);
+  --card-foreground: oklch(0.98 0.004 285);
+
+  /* punchy violet-blue accent */
+  --primary: oklch(0.62 0.235 280);
+  --primary-foreground: oklch(0.99 0 0);
+  --brand: oklch(0.62 0.235 280);
+  --brand-foreground: oklch(0.99 0 0);
+  --brand-muted: oklch(0.3 0.09 282);
+
+  --secondary: oklch(0.26 0.018 285);
+  --secondary-foreground: oklch(0.98 0.004 285);
+  --muted: oklch(0.26 0.018 285);
+  --muted-foreground: oklch(0.7 0.02 285);
+  --accent: oklch(0.28 0.02 285);
+  --accent-foreground: oklch(0.98 0.004 285);
+
+  /* urgent (red) */
+  --destructive: oklch(0.62 0.23 22);
+  --urgent: oklch(0.66 0.23 22);
+  --urgent-foreground: oklch(0.99 0 0);
+  --urgent-muted: oklch(0.32 0.11 22);
+
+  /* soon / email (amber) */
+  --warning: oklch(0.8 0.16 78);
+  --warning-foreground: oklch(0.2 0.03 78);
+  --warning-muted: oklch(0.34 0.08 70);
+
+  --success: oklch(0.72 0.17 155);
+
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.62 0.235 280);
+  --radius: 0.9rem;
 }
 
 body {

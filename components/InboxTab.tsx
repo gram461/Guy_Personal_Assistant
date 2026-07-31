@@ -1,7 +1,12 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { useSession, signIn } from 'next-auth/react'
-import { colors, headerColors, badge as badgeColors, sectionLabelStyle, cardStyle } from '@/lib/theme'
+import { Mail } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { ScreenHeader } from '@/components/dashboard/screen-header'
+import { SectionHeading } from '@/components/dashboard/section-heading'
+import { GoogleIcon } from '@/components/dashboard/google-icon'
 
 interface Email {
   id: string
@@ -52,59 +57,97 @@ export default function InboxTab() {
 
   return (
     <div>
-      <div style={{ background: headerColors.navy, padding: '20px 20px 16px', color: 'white' }}>
-        <p style={{ fontSize: 20, fontWeight: 500, margin: 0 }}>Inbox</p>
-        <p style={{ fontSize: 13, opacity: 0.6, margin: '4px 0 0' }}>Emails that matter to you</p>
-      </div>
+      <ScreenHeader title="Inbox" subtitle="Emails that matter to you" />
 
-      <div style={{ padding: 16 }}>
-        {!session ? (
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <p style={{ color: '#555', fontSize: 14, marginBottom: 16 }}>Connect Gmail to see emails that matter to you</p>
-            <button onClick={() => signIn('google')} style={{ background: headerColors.navy, color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
-              Sign in with Google
-            </button>
+      {!session ? (
+        <main className="flex flex-1 flex-col items-center justify-center gap-6 px-8 pb-16 pt-16 text-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-brand-muted text-primary-foreground">
+            <Mail className="size-7" strokeWidth={2.25} aria-hidden="true" />
           </div>
-        ) : (
-          <>
-            {loading && <p style={{ color: colors.textSecondary, fontSize: 14 }}>Loading emails...</p>}
-            {error && <p style={{ color: badgeColors.red.color, fontSize: 14 }}>{error}</p>}
+          <p className="max-w-xs text-pretty text-base font-medium text-muted-foreground">
+            Connect Gmail to see emails that matter to you
+          </p>
+          <button
+            type="button"
+            onClick={() => signIn('google')}
+            className="flex items-center justify-center gap-2.5 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <GoogleIcon className="size-5" />
+            Sign in with Google
+          </button>
+        </main>
+      ) : (
+        <div className="space-y-2.5 p-4">
+          {loading && <p className="px-1 py-10 text-center text-sm text-muted-foreground">Loading emails...</p>}
+          {error && <p className="px-1 py-10 text-center text-sm font-medium text-urgent">{error}</p>}
 
-            {!loading && !error && (
-              <>
-                {unread.length > 0 && (
-                  <>
-                    <p style={sectionLabelStyle}>Unread</p>
-                    {unread.map(e => <EmailCard key={e.id} {...e} />)}
-                  </>
-                )}
-                {read.length > 0 && (
-                  <>
-                    <p style={sectionLabelStyle}>Earlier</p>
-                    {read.map(e => <EmailCard key={e.id} {...e} />)}
-                  </>
-                )}
-                {emails.length === 0 && (
-                  <p style={{ color: colors.textSecondary, fontSize: 14 }}>No emails found.</p>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </div>
+          {!loading && !error && (
+            <>
+              {unread.length > 0 && (
+                <section aria-labelledby="inbox-unread-heading">
+                  <SectionHeading title="Unread" />
+                  <div id="inbox-unread-heading" className="space-y-2.5">
+                    {unread.map(e => <EmailCard key={e.id} email={e} />)}
+                  </div>
+                </section>
+              )}
+
+              {read.length > 0 && (
+                <section aria-labelledby="inbox-earlier-heading" className="mt-7">
+                  <SectionHeading title="Earlier" />
+                  <div id="inbox-earlier-heading" className="space-y-2.5">
+                    {read.map(e => <EmailCard key={e.id} email={e} />)}
+                  </div>
+                </section>
+              )}
+
+              {emails.length === 0 && (
+                <p className="px-1 py-10 text-center text-sm text-muted-foreground">No emails found.</p>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
 
-function EmailCard({ from, subject, date, unread, snippet }: Email) {
+function EmailCard({ email }: { email: Email }) {
+  const unread = email.unread
   return (
-    <div style={{ ...cardStyle, padding: '14px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <p style={{ fontSize: 14, fontWeight: unread ? 600 : 400, color: colors.textPrimary, margin: 0 }}>{formatFrom(from)}</p>
-        <p style={{ fontSize: 11, color: colors.textSecondary, margin: 0 }}>{formatDate(date)}</p>
+    <div
+      className={cn(
+        'relative flex items-start gap-3 overflow-hidden rounded-2xl bg-card p-3.5',
+        unread && 'before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary',
+      )}
+    >
+      <div
+        className={cn(
+          'flex size-10 shrink-0 items-center justify-center rounded-xl',
+          unread ? 'bg-brand-muted text-primary-foreground' : 'bg-secondary text-muted-foreground',
+        )}
+      >
+        <Mail className="size-5" strokeWidth={2.25} aria-hidden="true" />
       </div>
-      <p style={{ fontSize: 13, color: unread ? '#333' : colors.textSecondary, margin: '0 0 4px' }}>{subject}</p>
-      <p style={{ fontSize: 12, color: colors.textSecondary, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{snippet}</p>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-1.5">
+            {unread ? (
+              <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" role="img" />
+            ) : null}
+            <p className={cn('truncate text-sm', unread ? 'font-bold text-card-foreground' : 'font-medium text-foreground/80')}>
+              {formatFrom(email.from)}
+            </p>
+          </div>
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">{formatDate(email.date)}</span>
+        </div>
+
+        <p className={cn('mt-0.5 truncate text-sm', unread ? 'font-semibold text-card-foreground' : 'text-foreground/70')}>
+          {email.subject}
+        </p>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">{email.snippet}</p>
+      </div>
     </div>
   )
 }

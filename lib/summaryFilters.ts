@@ -1,6 +1,12 @@
+function pacificDateOnly(d: Date): string {
+  return d.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+}
+
 export function daysUntil(dateStr: string) {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const target = new Date(dateStr); target.setHours(0, 0, 0, 0)
+  const todayKey = pacificDateOnly(new Date())
+  const targetKey = pacificDateOnly(new Date(dateStr))
+  const today = new Date(`${todayKey}T00:00:00Z`)
+  const target = new Date(`${targetKey}T00:00:00Z`)
   return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 }
 

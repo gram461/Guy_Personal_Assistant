@@ -3,15 +3,9 @@
 import { useState, useEffect } from 'react'
 import AddEventModal from './AddEventModal'
 import { colors, headerColors, badge as badgeColors, sectionLabelStyle, cardStyle } from '@/lib/theme'
+import { daysUntil } from '@/lib/summaryFilters'
 
 type Event = { title: string; date: string; description: string }
-
-function daysUntil(dateStr: string) {
-  const now = new Date()
-  const then = new Date(dateStr)
-  const diff = Math.ceil((then.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  return diff
-}
 
 function formatTime(dateStr: string) {
   if (!dateStr.includes('T')) return null

@@ -4,16 +4,9 @@ import { useState, useEffect } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import AddEventModal from './AddEventModal'
 import { colors, headerColors, badge as badgeColors, sectionLabelStyle, cardStyle } from '@/lib/theme'
+import { daysUntil } from '@/lib/summaryFilters'
 
 type Event = { title: string; date: string; location: string }
-
-function daysUntil(dateStr: string) {
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const then = new Date(dateStr)
-  then.setHours(0, 0, 0, 0)
-  return Math.ceil((then.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-}
 
 function formatTime(dateStr: string) {
   if (!dateStr.includes('T')) return null

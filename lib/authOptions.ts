@@ -1,6 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
-import { saveGoogleRefreshToken } from './googleTokenRefresh'
+import { saveGoogleRefreshToken, getFreshGoogleAccessToken } from './googleTokenRefresh'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,9 +20,22 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account }) {
       if (account) {
         token.accessToken = account.access_token
+        token.expiresAt = account.expires_at
         if (account.refresh_token) {
           await saveGoogleRefreshToken(account.refresh_token)
         }
+        return token
+      }
+
+      const expiresAt = (token.expiresAt as number | undefined) ?? 0
+      if (Date.now() < expiresAt * 1000 - 5 * 60 * 1000) {
+        return token
+      }
+
+      const freshAccessToken = await getFreshGoogleAccessToken()
+      if (freshAccessToken) {
+        token.accessToken = freshAccessToken
+        token.expiresAt = Math.floor(Date.now() / 1000) + 3600
       }
       return token
     },

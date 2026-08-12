@@ -136,9 +136,12 @@ export default function InboxTab() {
   )
 }
 
-function overflowOf(el: HTMLElement | null) {
-  if (!el) return 0
-  return Math.max(0, el.scrollWidth - el.clientWidth)
+// Checks whether an element's own box extends past a boundary element's
+// right edge - the real signal of broken layout, unlike scrollWidth vs
+// clientWidth (which is naturally huge on any working ellipsis truncation).
+function edgeOverflow(el: HTMLElement | null, boundary: HTMLElement | null) {
+  if (!el || !boundary) return 0
+  return Math.max(0, Math.round(el.getBoundingClientRect().right - boundary.getBoundingClientRect().right))
 }
 
 function EmailCard({ email }: { email: Email }) {
@@ -153,13 +156,13 @@ function EmailCard({ email }: { email: Email }) {
 
   useEffect(() => {
     const id = setTimeout(() => {
+      const card = cardRef.current
       const parts = [
-        ['card', overflowOf(cardRef.current)],
-        ['row', overflowOf(rowRef.current)],
-        ['name', overflowOf(nameRef.current)],
-        ['time', overflowOf(timeRef.current)],
-        ['subj', overflowOf(subjectRef.current)],
-        ['snip', overflowOf(snippetRef.current)],
+        ['row', edgeOverflow(rowRef.current, card)],
+        ['name', edgeOverflow(nameRef.current, card)],
+        ['time', edgeOverflow(timeRef.current, card)],
+        ['subj', edgeOverflow(subjectRef.current, card)],
+        ['snip', edgeOverflow(snippetRef.current, card)],
       ] as const
       const overflowing = parts.filter(([, px]) => px > 2)
       setReport(overflowing.map(([label, px]) => `${label}+${px}px`).join(' '))

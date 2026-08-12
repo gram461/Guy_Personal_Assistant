@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useSession, signIn } from 'next-auth/react'
 import { Mail } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { ScreenHeader } from '@/components/dashboard/screen-header'
 import { SectionHeading } from '@/components/dashboard/section-heading'
 import { GoogleIcon } from '@/components/dashboard/google-icon'
+import { ListCard } from '@/components/dashboard/list-card'
 
 interface Email {
   id: string
@@ -115,39 +115,13 @@ export default function InboxTab() {
 function EmailCard({ email }: { email: Email }) {
   const unread = email.unread
   return (
-    <div
-      className={cn(
-        'relative flex items-start gap-3 overflow-hidden rounded-2xl bg-card p-3.5',
-        unread && 'before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary',
-      )}
-    >
-      <div
-        className={cn(
-          'flex size-8 shrink-0 items-center justify-center rounded-xl',
-          unread ? 'bg-brand-muted text-primary-foreground' : 'bg-secondary text-muted-foreground',
-        )}
-      >
-        <Mail className="size-4" strokeWidth={2.25} aria-hidden="true" />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-1.5">
-            {unread ? (
-              <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" role="img" />
-            ) : null}
-            <p className={cn('min-w-0 truncate text-sm', unread ? 'font-bold text-card-foreground' : 'font-medium text-foreground/80')}>
-              {formatFrom(email.from)}
-            </p>
-          </div>
-          <span className="shrink-0 text-xs font-medium text-muted-foreground">{formatDate(email.date)}</span>
-        </div>
-
-        <p className={cn('mt-0.5 truncate text-sm', unread ? 'font-semibold text-card-foreground' : 'text-foreground/70')}>
-          {email.subject}
-        </p>
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">{email.snippet}</p>
-      </div>
-    </div>
+    <ListCard
+      icon={Mail}
+      iconTone={unread ? 'brand' : 'neutral'}
+      accentEdge={unread ? 'brand' : undefined}
+      title={formatFrom(email.from)}
+      subtitle={email.subject}
+      right={<span className="text-xs font-medium text-muted-foreground">{formatDate(email.date)}</span>}
+    />
   )
 }

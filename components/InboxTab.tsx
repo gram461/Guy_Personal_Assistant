@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSession, signIn } from 'next-auth/react'
 import { Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -33,29 +33,6 @@ function formatDate(dateStr: string) {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
-function DebugMeasurements() {
-  const [info, setInfo] = useState('')
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      const vv = window.visualViewport
-      setInfo(
-        `screen ${window.innerWidth}px | page ${document.documentElement.scrollWidth}px | ` +
-        `overflow ${document.documentElement.scrollWidth - window.innerWidth}px | ` +
-        `scale ${vv ? vv.scale.toFixed(2) : 'n/a'} | dpr ${window.devicePixelRatio}`
-      )
-    }, 800)
-    return () => clearTimeout(id)
-  })
-
-  if (!info) return null
-  return (
-    <div className="fixed inset-x-0 top-0 z-50 break-words bg-yellow-400 p-2 text-[11px] font-bold text-black">
-      {info}
-    </div>
-  )
-}
-
 export default function InboxTab() {
   const { data: session } = useSession()
   const [emails, setEmails] = useState<Email[]>([])
@@ -80,7 +57,6 @@ export default function InboxTab() {
 
   return (
     <div>
-      <DebugMeasurements />
       <ScreenHeader title="Inbox" subtitle="Emails that matter to you" />
 
       {!session ? (
@@ -136,43 +112,10 @@ export default function InboxTab() {
   )
 }
 
-// Checks whether an element's own box extends past a boundary element's
-// right edge - the real signal of broken layout, unlike scrollWidth vs
-// clientWidth (which is naturally huge on any working ellipsis truncation).
-function edgeOverflow(el: HTMLElement | null, boundary: HTMLElement | null) {
-  if (!el || !boundary) return 0
-  return Math.max(0, Math.round(el.getBoundingClientRect().right - boundary.getBoundingClientRect().right))
-}
-
 function EmailCard({ email }: { email: Email }) {
   const unread = email.unread
-  const cardRef = useRef<HTMLDivElement>(null)
-  const rowRef = useRef<HTMLDivElement>(null)
-  const nameRef = useRef<HTMLParagraphElement>(null)
-  const timeRef = useRef<HTMLSpanElement>(null)
-  const subjectRef = useRef<HTMLParagraphElement>(null)
-  const snippetRef = useRef<HTMLParagraphElement>(null)
-  const [report, setReport] = useState('')
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      const card = cardRef.current
-      const parts = [
-        ['row', edgeOverflow(rowRef.current, card)],
-        ['name', edgeOverflow(nameRef.current, card)],
-        ['time', edgeOverflow(timeRef.current, card)],
-        ['subj', edgeOverflow(subjectRef.current, card)],
-        ['snip', edgeOverflow(snippetRef.current, card)],
-      ] as const
-      const overflowing = parts.filter(([, px]) => px > 2)
-      setReport(overflowing.map(([label, px]) => `${label}+${px}px`).join(' '))
-    }, 800)
-    return () => clearTimeout(id)
-  }, [])
-
   return (
     <div
-      ref={cardRef}
       className={cn(
         'relative flex items-start gap-3 overflow-hidden rounded-2xl bg-card p-3.5',
         unread && 'before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary',
@@ -188,27 +131,22 @@ function EmailCard({ email }: { email: Email }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        {report ? (
-          <div className="mb-1 break-words rounded bg-red-500 px-1 py-0.5 text-[10px] font-bold text-white">
-            {report}
-          </div>
-        ) : null}
-        <div ref={rowRef} className="flex items-baseline justify-between gap-3">
+        <div className="flex items-baseline justify-between gap-3">
           <div className="flex min-w-0 items-center gap-1.5">
             {unread ? (
               <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" role="img" />
             ) : null}
-            <p ref={nameRef} className={cn('min-w-0 truncate text-sm', unread ? 'font-bold text-card-foreground' : 'font-medium text-foreground/80')}>
+            <p className={cn('min-w-0 truncate text-sm', unread ? 'font-bold text-card-foreground' : 'font-medium text-foreground/80')}>
               {formatFrom(email.from)}
             </p>
           </div>
-          <span ref={timeRef} className="shrink-0 text-xs font-medium text-muted-foreground">{formatDate(email.date)}</span>
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">{formatDate(email.date)}</span>
         </div>
 
-        <p ref={subjectRef} className={cn('mt-0.5 truncate text-sm', unread ? 'font-semibold text-card-foreground' : 'text-foreground/70')}>
+        <p className={cn('mt-0.5 truncate text-sm', unread ? 'font-semibold text-card-foreground' : 'text-foreground/70')}>
           {email.subject}
         </p>
-        <p ref={snippetRef} className="mt-0.5 truncate text-xs text-muted-foreground">{email.snippet}</p>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">{email.snippet}</p>
       </div>
     </div>
   )

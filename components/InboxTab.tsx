@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSession, signIn } from 'next-auth/react'
 import { Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -136,10 +136,40 @@ export default function InboxTab() {
   )
 }
 
+function overflowOf(el: HTMLElement | null) {
+  if (!el) return 0
+  return Math.max(0, el.scrollWidth - el.clientWidth)
+}
+
 function EmailCard({ email }: { email: Email }) {
   const unread = email.unread
+  const cardRef = useRef<HTMLDivElement>(null)
+  const rowRef = useRef<HTMLDivElement>(null)
+  const nameRef = useRef<HTMLParagraphElement>(null)
+  const timeRef = useRef<HTMLSpanElement>(null)
+  const subjectRef = useRef<HTMLParagraphElement>(null)
+  const snippetRef = useRef<HTMLParagraphElement>(null)
+  const [report, setReport] = useState('')
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const parts = [
+        ['card', overflowOf(cardRef.current)],
+        ['row', overflowOf(rowRef.current)],
+        ['name', overflowOf(nameRef.current)],
+        ['time', overflowOf(timeRef.current)],
+        ['subj', overflowOf(subjectRef.current)],
+        ['snip', overflowOf(snippetRef.current)],
+      ] as const
+      const overflowing = parts.filter(([, px]) => px > 2)
+      setReport(overflowing.map(([label, px]) => `${label}+${px}px`).join(' '))
+    }, 800)
+    return () => clearTimeout(id)
+  }, [])
+
   return (
     <div
+      ref={cardRef}
       className={cn(
         'relative flex items-start gap-3 overflow-hidden rounded-2xl bg-card p-3.5',
         unread && 'before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary',
@@ -155,22 +185,27 @@ function EmailCard({ email }: { email: Email }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-3">
+        {report ? (
+          <div className="mb-1 break-words rounded bg-red-500 px-1 py-0.5 text-[10px] font-bold text-white">
+            {report}
+          </div>
+        ) : null}
+        <div ref={rowRef} className="flex items-baseline justify-between gap-3">
           <div className="flex min-w-0 items-center gap-1.5">
             {unread ? (
               <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" role="img" />
             ) : null}
-            <p className={cn('min-w-0 truncate text-sm', unread ? 'font-bold text-card-foreground' : 'font-medium text-foreground/80')}>
+            <p ref={nameRef} className={cn('min-w-0 truncate text-sm', unread ? 'font-bold text-card-foreground' : 'font-medium text-foreground/80')}>
               {formatFrom(email.from)}
             </p>
           </div>
-          <span className="shrink-0 text-xs font-medium text-muted-foreground">{formatDate(email.date)}</span>
+          <span ref={timeRef} className="shrink-0 text-xs font-medium text-muted-foreground">{formatDate(email.date)}</span>
         </div>
 
-        <p className={cn('mt-0.5 truncate text-sm', unread ? 'font-semibold text-card-foreground' : 'text-foreground/70')}>
+        <p ref={subjectRef} className={cn('mt-0.5 truncate text-sm', unread ? 'font-semibold text-card-foreground' : 'text-foreground/70')}>
           {email.subject}
         </p>
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">{email.snippet}</p>
+        <p ref={snippetRef} className="mt-0.5 truncate text-xs text-muted-foreground">{email.snippet}</p>
       </div>
     </div>
   )

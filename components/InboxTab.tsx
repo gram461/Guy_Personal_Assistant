@@ -136,7 +136,7 @@ function EmailCard({ email }: { email: Email }) {
             {unread ? (
               <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" role="img" />
             ) : null}
-            <p className={cn('truncate text-sm', unread ? 'font-bold text-card-foreground' : 'font-medium text-foreground/80')}>
+            <p className={cn('min-w-0 truncate text-sm', unread ? 'font-bold text-card-foreground' : 'font-medium text-foreground/80')}>
               {formatFrom(email.from)}
             </p>
           </div>

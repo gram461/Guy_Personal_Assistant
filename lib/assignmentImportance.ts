@@ -24,7 +24,7 @@ export async function classifyImportantAssignments(assignments: SchoologyEvent[]
         max_tokens: 512,
         messages: [{
           role: 'user',
-          content: `Here are a student's upcoming assignments/events:\n\n${candidates.map((c, i) => `${i}. "${c.title}" — due in ${daysUntil(c.date)} day(s). Description: ${c.description || '(none)'}`).join('\n')}\n\nWhich of these are high-stakes (tests, exams, quizzes, major projects, big due dates) as opposed to routine homework or minor events? Respond with ONLY a JSON array (no other text) of objects like [{"index": 0, "reason": "short reason"}] for the high-stakes ones. If none are high-stakes, respond with [].`,
+          content: `Here are a student's upcoming assignments/events:\n\n${candidates.map((c, i) => `${i}. "${c.title}" — due in ${daysUntil(c.date)} day(s). Description: ${c.description || '(none)'}`).join('\n')}\n\nWhich of these are high-stakes (tests, exams, quizzes, major projects, big due dates) as opposed to routine homework or minor events? Do not assume something is high-stakes just because the title contains a word like "test," "quiz," or "exam" - titles alone don't tell you how much an assignment actually counts toward the grade. Only flag something if the title or description gives real evidence it's significant (e.g. explicitly described as a midterm, final, unit test, or major project). If you're not sure, don't flag it. Respond with ONLY a JSON array (no other text) of objects like [{"index": 0, "reason": "short reason"}] for the high-stakes ones. If none are high-stakes, respond with [].`,
         }],
       }),
     })

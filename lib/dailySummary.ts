@@ -26,7 +26,7 @@ async function generateSummaryText(accessToken: string | null): Promise<string> 
   const flaggedTitles = new Set(important.map(i => i.title))
   const label = (title: string) => (flaggedTitles.has(title) ? `${title} (HIGH-STAKES)` : title)
 
-  const prompt = `You are Guy's personal assistant. Write a short, warm, natural-language summary of his day - plain conversational prose, second person ("you have..."), no markdown, no bullet points, no headers. Two paragraphs only.
+  const prompt = `You are Guy's personal assistant. Write a short, plain-spoken summary of his day - two short paragraphs, no markdown, no bullet points, no headers, second person ("you have..."). Be direct and factual, not encouraging or cheerful. Keep each paragraph to 1-3 sentences.
 
 Today's calendar events:
 ${listOrNone(todayEvents.map(e => `${e.title} at ${e.date}`))}
@@ -42,11 +42,11 @@ ${listOrNone([
 
 Write two paragraphs:
 
-Paragraph 1 - Today: Summarize what's happening today. Give more weight and detail to items marked HIGH-STAKES (mention them by name, note why they matter) and less to routine items (can be grouped briefly, e.g. "a couple of regular homework assignments"). If nothing is due or happening today, say that plainly and positively.
+Paragraph 1 - Today: State what's happening today. Mention HIGH-STAKES items by name with a brief reason why they matter. Group routine items briefly (e.g. "two regular homework assignments"). If nothing is due or happening today, say exactly that in one short sentence - e.g. "You have nothing due today." Do not add commentary, encouragement, or filler like "relax" or "take it easy."
 
-Paragraph 2 - This week: Briefly note what's coming up later this week, again prioritizing HIGH-STAKES and soon-due items over routine ones. If nothing else is coming up, say so briefly - don't pad it.
+Paragraph 2 - This week: State what's coming up later this week, prioritizing HIGH-STAKES and soon-due items. If nothing else is coming up, say so in one short sentence and stop - no padding.
 
-Do not repeat the date. Do not use phrases like "Here is your summary." Start directly with the content.`
+Do not repeat the date. Do not use phrases like "Here is your summary." Do not add encouragement, pep talk, or motivational language anywhere. Start directly with the content.`
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

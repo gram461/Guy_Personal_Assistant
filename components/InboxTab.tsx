@@ -33,6 +33,29 @@ function formatDate(dateStr: string) {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
+function DebugMeasurements() {
+  const [info, setInfo] = useState('')
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const vv = window.visualViewport
+      setInfo(
+        `screen ${window.innerWidth}px | page ${document.documentElement.scrollWidth}px | ` +
+        `overflow ${document.documentElement.scrollWidth - window.innerWidth}px | ` +
+        `scale ${vv ? vv.scale.toFixed(2) : 'n/a'} | dpr ${window.devicePixelRatio}`
+      )
+    }, 800)
+    return () => clearTimeout(id)
+  })
+
+  if (!info) return null
+  return (
+    <div className="fixed inset-x-0 top-0 z-50 break-words bg-yellow-400 p-2 text-[11px] font-bold text-black">
+      {info}
+    </div>
+  )
+}
+
 export default function InboxTab() {
   const { data: session } = useSession()
   const [emails, setEmails] = useState<Email[]>([])
@@ -57,6 +80,7 @@ export default function InboxTab() {
 
   return (
     <div>
+      <DebugMeasurements />
       <ScreenHeader title="Inbox" subtitle="Emails that matter to you" />
 
       {!session ? (

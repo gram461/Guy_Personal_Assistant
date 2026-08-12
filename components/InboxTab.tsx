@@ -123,11 +123,11 @@ function EmailCard({ email }: { email: Email }) {
     >
       <div
         className={cn(
-          'flex size-10 shrink-0 items-center justify-center rounded-xl',
+          'flex size-8 shrink-0 items-center justify-center rounded-xl',
           unread ? 'bg-brand-muted text-primary-foreground' : 'bg-secondary text-muted-foreground',
         )}
       >
-        <Mail className="size-5" strokeWidth={2.25} aria-hidden="true" />
+        <Mail className="size-4" strokeWidth={2.25} aria-hidden="true" />
       </div>
 
       <div className="min-w-0 flex-1">

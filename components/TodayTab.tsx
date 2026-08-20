@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { AlertTriangle, Backpack, BookOpen, CalendarCheck, Dumbbell, GraduationCap, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { loadSettings, defaultChecklist } from '@/lib/settingsStorage'
@@ -47,6 +48,9 @@ function daysTag(days: number) {
 }
 
 export default function TodayTab() {
+  const { data: session } = useSession()
+  const [displayName, setDisplayName] = useState('')
+  const firstName = displayName || session?.user?.name?.split(' ')[0] || 'there'
   const [time, setTime] = useState<TimeOfDay>(getTimeOfDay())
   const [events, setEvents] = useState<any[]>([])
   const [assignments, setAssignments] = useState<any[]>([])
@@ -60,7 +64,10 @@ export default function TodayTab() {
     fetch('/api/calendar').then(r => r.json()).then(d => setEvents(d.events || []))
     fetch('/api/schoology').then(r => r.json()).then(d => setAssignments(d.events || []))
     fetch('/api/gmail').then(r => r.json()).then(d => setEmails((d.emails || []).filter((e: any) => e.unread)))
-    loadSettings().then(({ nightlyChecklist }) => setEnabledChecklist(nightlyChecklist))
+    loadSettings().then(({ nightlyChecklist, displayName }) => {
+      setEnabledChecklist(nightlyChecklist)
+      setDisplayName(displayName)
+    })
   }, [])
 
   useEffect(() => {
@@ -84,7 +91,7 @@ export default function TodayTab() {
 
   return (
     <div>
-      <GreetingHeader name="Guy" timeOfDay={time} dateLabel={formatDate()} />
+      <GreetingHeader name={firstName} timeOfDay={time} dateLabel={formatDate()} />
 
       <div className="space-y-3.5 p-4">
         <StatusSummary

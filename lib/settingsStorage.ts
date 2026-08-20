@@ -9,20 +9,22 @@ export const defaultChecklist: NightlyChecklistSettings = { studied: true, worke
 export async function loadSettings(): Promise<{
   notifications: NotificationSettings
   nightlyChecklist: NightlyChecklistSettings
+  displayName: string
 }> {
   const { data, error } = await supabase
     .from('settings')
-    .select('notifications, nightly_checklist')
+    .select('notifications, nightly_checklist, display_name')
     .eq('id', 'default')
     .single()
 
   if (error || !data) {
-    return { notifications: defaultNotifications, nightlyChecklist: defaultChecklist }
+    return { notifications: defaultNotifications, nightlyChecklist: defaultChecklist, displayName: '' }
   }
 
   return {
     notifications: data.notifications ?? defaultNotifications,
     nightlyChecklist: data.nightly_checklist ?? defaultChecklist,
+    displayName: data.display_name ?? '',
   }
 }
 
@@ -32,4 +34,8 @@ export async function saveNotificationSettings(value: NotificationSettings) {
 
 export async function saveNightlyChecklistSettings(value: NightlyChecklistSettings) {
   await supabase.from('settings').update({ nightly_checklist: value }).eq('id', 'default')
+}
+
+export async function saveDisplayName(value: string) {
+  await supabase.from('settings').update({ display_name: value || null }).eq('id', 'default')
 }

@@ -8,6 +8,7 @@ import {
   loadSettings,
   saveNotificationSettings,
   saveNightlyChecklistSettings,
+  saveDisplayName,
   defaultNotifications,
   defaultChecklist,
   type NotificationSettings,
@@ -33,13 +34,15 @@ export default function SettingsTab() {
   const { data: session } = useSession()
   const [notifs, setNotifs] = useState(defaultNotifications)
   const [checklist, setChecklist] = useState(defaultChecklist)
+  const [displayName, setDisplayName] = useState('')
   const [pushState, setPushState] = useState<PushState>('default')
   const [pushBusy, setPushBusy] = useState(false)
 
   useEffect(() => {
-    loadSettings().then(({ notifications, nightlyChecklist }) => {
+    loadSettings().then(({ notifications, nightlyChecklist, displayName }) => {
       setNotifs(notifications)
       setChecklist(nightlyChecklist)
+      setDisplayName(displayName)
     })
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPushState(Notification.permission)
@@ -80,11 +83,18 @@ export default function SettingsTab() {
         {/* Profile */}
         <div className="flex items-center gap-3.5 rounded-2xl bg-card p-4">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-muted text-lg font-extrabold text-primary-foreground">
-            G
+            {(displayName || session?.user?.name || '?').charAt(0).toUpperCase()}
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-base font-bold text-card-foreground">Guy</p>
-            <p className="truncate text-sm text-muted-foreground">Cupertino High School</p>
+          <div className="min-w-0 flex-1">
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              onBlur={() => saveDisplayName(displayName.trim())}
+              placeholder={session?.user?.name?.split(' ')[0] || 'Your name'}
+              className="w-full truncate bg-transparent text-base font-bold text-card-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
+            />
+            <p className="truncate text-sm text-muted-foreground">{session?.user?.email || 'Not signed in'}</p>
           </div>
         </div>
 

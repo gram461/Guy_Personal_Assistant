@@ -19,15 +19,17 @@ const CHECKLIST_ITEMS = [
   { key: 'packed', label: 'Bag packed for tomorrow?', icon: Backpack },
 ] as const
 
+const PACIFIC_TZ = 'America/Los_Angeles'
+
 function getTimeOfDay(): TimeOfDay {
-  const hour = new Date().getHours()
+  const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: PACIFIC_TZ, hour: 'numeric', hourCycle: 'h23' }).format(new Date()))
   if (hour >= 7 && hour < 12) return 'morning'
   if (hour >= 12 && hour < 18) return 'afternoon'
   return 'night'
 }
 
 function formatDate() {
-  return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: PACIFIC_TZ })
 }
 
 function formatEventTime(dateStr: string) {

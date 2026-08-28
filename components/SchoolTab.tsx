@@ -34,6 +34,7 @@ export default function SchoolTab() {
   const [error, setError] = useState('')
   const [sheetOpen, setSheetOpen] = useState(false)
   const [added, setAdded] = useState<{ title: string; sub: string }[]>([])
+  const [pendingDone, setPendingDone] = useState<{ event: Event; timeoutId: ReturnType<typeof setTimeout> } | null>(null)
 
   useEffect(() => {
     fetch('/api/schoology')
@@ -53,13 +54,32 @@ export default function SchoolTab() {
     setAdded(prev => [...prev, { title, sub: description || 'Added by you' }])
   }
 
-  function markDone(uid: string) {
-    setEvents(prev => prev.filter(e => e.uid !== uid))
+  function commitDone(uid: string) {
     fetch('/api/complete-assignment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uid }),
     }).catch(() => {})
+  }
+
+  function markDone(event: Event) {
+    if (pendingDone) {
+      clearTimeout(pendingDone.timeoutId)
+      commitDone(pendingDone.event.uid)
+    }
+    const timeoutId = setTimeout(() => {
+      commitDone(event.uid)
+      setPendingDone(null)
+    }, 6000)
+    setPendingDone({ event, timeoutId })
+    setEvents(prev => prev.filter(e => e.uid !== event.uid))
+  }
+
+  function undoDone() {
+    if (!pendingDone) return
+    clearTimeout(pendingDone.timeoutId)
+    setEvents(prev => [...prev, pendingDone.event])
+    setPendingDone(null)
   }
 
   return (
@@ -76,7 +96,7 @@ export default function SchoolTab() {
               <section aria-labelledby="soon-heading">
                 <SectionHeading title="Today & tomorrow" />
                 <div id="soon-heading" className="space-y-2.5">
-                  {soon.map(e => <AssignmentCard key={e.uid} event={e} onDone={markDone} />)}
+                  {soon.map(e => <AssignmentCard key={e.uid} event={e} onDone={() => markDone(e)} />)}
                 </div>
               </section>
             )}
@@ -85,7 +105,7 @@ export default function SchoolTab() {
               <section aria-labelledby="week-heading" className="mt-7">
                 <SectionHeading title="This week" />
                 <div id="week-heading" className="space-y-2.5">
-                  {week.map(e => <AssignmentCard key={e.uid} event={e} onDone={markDone} />)}
+                  {week.map(e => <AssignmentCard key={e.uid} event={e} onDone={() => markDone(e)} />)}
                 </div>
               </section>
             )}
@@ -114,6 +134,19 @@ export default function SchoolTab() {
       </div>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md">
+        {pendingDone && (
+          <div className="pointer-events-auto absolute inset-x-4 bottom-44 flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3 shadow-lg">
+            <p className="truncate text-sm text-card-foreground">Marked done: {pendingDone.event.title}</p>
+            <button
+              type="button"
+              onClick={undoDone}
+              className="shrink-0 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Undo
+            </button>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => setSheetOpen(true)}
@@ -133,7 +166,7 @@ export default function SchoolTab() {
   )
 }
 
-function AssignmentCard({ event, onDone }: { event: Event; onDone: (uid: string) => void }) {
+function AssignmentCard({ event, onDone }: { event: Event; onDone: () => void }) {
   const days = daysUntil(event.date)
   const date = new Date(event.date)
   const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -151,7 +184,7 @@ function AssignmentCard({ event, onDone }: { event: Event; onDone: (uid: string)
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => onDone(event.uid)}
+            onClick={onDone}
             aria-label="Mark assignment done"
             className="flex size-7 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-success/15 hover:text-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >

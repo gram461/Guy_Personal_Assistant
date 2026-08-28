@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { GraduationCap, Plus } from 'lucide-react'
+import { GraduationCap, Plus, Check } from 'lucide-react'
 import { daysUntil } from '@/lib/summaryFilters'
 import { ScreenHeader } from '@/components/dashboard/screen-header'
 import { ListCard } from '@/components/dashboard/list-card'
@@ -9,7 +9,7 @@ import { SectionHeading } from '@/components/dashboard/section-heading'
 import { Tag } from '@/components/dashboard/tag'
 import { AddAssignmentSheet, type NewAssignment } from '@/components/dashboard/add-assignment-sheet'
 
-type Event = { title: string; date: string; description: string }
+type Event = { title: string; date: string; description: string; uid: string }
 
 function formatTime(dateStr: string) {
   if (!dateStr.includes('T')) return null
@@ -53,6 +53,15 @@ export default function SchoolTab() {
     setAdded(prev => [...prev, { title, sub: description || 'Added by you' }])
   }
 
+  function markDone(uid: string) {
+    setEvents(prev => prev.filter(e => e.uid !== uid))
+    fetch('/api/complete-assignment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid }),
+    }).catch(() => {})
+  }
+
   return (
     <div>
       <ScreenHeader title="School" subtitle="Live from Schoology" />
@@ -67,7 +76,7 @@ export default function SchoolTab() {
               <section aria-labelledby="soon-heading">
                 <SectionHeading title="Today & tomorrow" />
                 <div id="soon-heading" className="space-y-2.5">
-                  {soon.map((e, i) => <AssignmentCard key={i} event={e} />)}
+                  {soon.map(e => <AssignmentCard key={e.uid} event={e} onDone={markDone} />)}
                 </div>
               </section>
             )}
@@ -76,7 +85,7 @@ export default function SchoolTab() {
               <section aria-labelledby="week-heading" className="mt-7">
                 <SectionHeading title="This week" />
                 <div id="week-heading" className="space-y-2.5">
-                  {week.map((e, i) => <AssignmentCard key={i} event={e} />)}
+                  {week.map(e => <AssignmentCard key={e.uid} event={e} onDone={markDone} />)}
                 </div>
               </section>
             )}
@@ -124,7 +133,7 @@ export default function SchoolTab() {
   )
 }
 
-function AssignmentCard({ event }: { event: Event }) {
+function AssignmentCard({ event, onDone }: { event: Event; onDone: (uid: string) => void }) {
   const days = daysUntil(event.date)
   const date = new Date(event.date)
   const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -138,7 +147,19 @@ function AssignmentCard({ event }: { event: Event }) {
       accentEdge={t}
       title={event.title}
       subtitle={`${dateStr} · ${time || 'All day'} · Schoology`}
-      right={<Tag tone={t}>{badgeLabel(days)}</Tag>}
+      right={
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onDone(event.uid)}
+            aria-label="Mark assignment done"
+            className="flex size-7 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-success/15 hover:text-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Check className="size-4" strokeWidth={2.5} aria-hidden="true" />
+          </button>
+          <Tag tone={t}>{badgeLabel(days)}</Tag>
+        </div>
+      }
     />
   )
 }

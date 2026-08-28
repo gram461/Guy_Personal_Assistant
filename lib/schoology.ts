@@ -1,6 +1,8 @@
+import { getCompletedUids } from './completedAssignments'
+
 const ICAL_URL = 'https://fuhsd.schoology.com/calendar/feed/ical/1782351675/dcfae28486f394950a9a3152a5dd45ea/ical.ics'
 
-export type SchoologyEvent = { title: string; date: string; description: string }
+export type SchoologyEvent = { title: string; date: string; description: string; uid: string }
 
 function parseIcal(text: string): SchoologyEvent[] {
   const events: SchoologyEvent[] = []
@@ -10,6 +12,7 @@ function parseIcal(text: string): SchoologyEvent[] {
     const summary = block.match(/SUMMARY:(.*)/)?.[1]?.trim() || 'Untitled'
     const dtstart = block.match(/DTSTART[^:]*:(.*)/)?.[1]?.trim()
     const description = block.match(/DESCRIPTION:(.*)/)?.[1]?.trim() || ''
+    const uid = block.match(/UID:(.*)/)?.[1]?.trim() || ''
     if (!dtstart) continue
 
     // Parse date like 20260625 or 20260625T080000Z
@@ -40,7 +43,7 @@ function parseIcal(text: string): SchoologyEvent[] {
       const dateOut = hasTime
         ? date.toISOString()
         : `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      events.push({ title: summary, date: dateOut, description })
+      events.push({ title: summary, date: dateOut, description, uid })
     }
   }
   return events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -50,5 +53,7 @@ export async function fetchSchoologyEvents(): Promise<SchoologyEvent[]> {
   const res = await fetch(ICAL_URL, { next: { revalidate: 300 } })
   if (!res.ok) throw new Error('Failed to fetch iCal')
   const text = await res.text()
-  return parseIcal(text)
+  const events = parseIcal(text)
+  const completedUids = await getCompletedUids()
+  return events.filter(e => !completedUids.has(e.uid))
 }

@@ -46,7 +46,7 @@ export default function SchoolTab() {
       .catch(() => { setError('Could not load Schoology data'); setLoading(false) })
   }, [])
 
-  const soon = events.filter(e => daysUntil(e.date) <= 2)
+  const soon = events.filter(e => daysUntil(e.date) >= 0 && daysUntil(e.date) <= 2)
   const week = events.filter(e => daysUntil(e.date) > 2)
 
   function addManualAssignment({ title, description, dueDate }: NewAssignment) {

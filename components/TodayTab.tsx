@@ -64,7 +64,7 @@ export default function TodayTab() {
 
   useEffect(() => {
     fetch('/api/calendar').then(r => r.json()).then(d => setEvents(d.events || []))
-    fetch('/api/schoology').then(r => r.json()).then(d => setAssignments(d.events || []))
+    fetch('/api/assignments').then(r => r.json()).then(d => setAssignments(d.assignments || []))
     fetch('/api/gmail').then(r => r.json()).then(d => setEmails((d.emails || []).filter((e: any) => e.unread)))
     loadSettings().then(({ nightlyChecklist, displayName }) => {
       setEnabledChecklist(nightlyChecklist)

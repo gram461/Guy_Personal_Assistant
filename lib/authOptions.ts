@@ -21,18 +21,18 @@ export const authOptions: NextAuthOptions = {
       if (account) {
         token.accessToken = account.access_token
         token.expiresAt = account.expires_at
-        if (account.refresh_token) {
-          await saveGoogleRefreshToken(account.refresh_token)
+        if (account.refresh_token && token.sub) {
+          await saveGoogleRefreshToken(token.sub, account.refresh_token)
         }
         return token
       }
 
       const expiresAt = (token.expiresAt as number | undefined) ?? 0
-      if (Date.now() < expiresAt * 1000 - 5 * 60 * 1000) {
+      if (Date.now() < expiresAt * 1000 - 5 * 60 * 1000 || !token.sub) {
         return token
       }
 
-      const freshAccessToken = await getFreshGoogleAccessToken()
+      const freshAccessToken = await getFreshGoogleAccessToken(token.sub)
       if (freshAccessToken) {
         token.accessToken = freshAccessToken
         token.expiresAt = Math.floor(Date.now() / 1000) + 3600
@@ -40,7 +40,8 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      (session as any).accessToken = token.accessToken
+      session.accessToken = token.accessToken as string | undefined
+      if (token.sub) session.user.id = token.sub
       return session
     },
   },

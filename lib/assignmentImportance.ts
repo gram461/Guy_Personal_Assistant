@@ -1,9 +1,9 @@
 import { daysUntil } from './summaryFilters'
-import type { SchoologyEvent } from './schoology'
+import type { Assignment } from './assignments'
 
 export type ImportantAssignment = { title: string; date: string; reason: string }
 
-export async function classifyImportantAssignments(assignments: SchoologyEvent[]): Promise<ImportantAssignment[]> {
+export async function classifyImportantAssignments(assignments: Assignment[]): Promise<ImportantAssignment[]> {
   const candidates = assignments.filter(a => {
     const days = daysUntil(a.date)
     return days >= 0 && days <= 3

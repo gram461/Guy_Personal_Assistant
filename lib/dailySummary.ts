@@ -1,4 +1,4 @@
-import { fetchSchoologyEvents } from './schoology'
+import { fetchAssignments } from './assignments'
 import { fetchCalendarEvents } from './googleCalendar'
 import { classifyImportantAssignments } from './assignmentImportance'
 import { filterTodaySummary, daysUntil } from './summaryFilters'
@@ -12,9 +12,9 @@ function listOrNone(items: string[]) {
   return items.length > 0 ? items.join('; ') : 'none'
 }
 
-async function generateSummaryText(accessToken: string | null): Promise<string> {
+async function generateSummaryText(userId: string, name: string, accessToken: string | null): Promise<string> {
   const [assignments, events] = await Promise.all([
-    fetchSchoologyEvents(),
+    fetchAssignments(userId),
     accessToken ? fetchCalendarEvents(accessToken) : Promise.resolve([]),
   ])
 
@@ -26,7 +26,7 @@ async function generateSummaryText(accessToken: string | null): Promise<string> 
   const flaggedTitles = new Set(important.map(i => i.title))
   const label = (title: string) => (flaggedTitles.has(title) ? `${title} (HIGH-STAKES)` : title)
 
-  const prompt = `You are Guy's personal assistant. Write a short, plain-spoken summary of his day - two short paragraphs, no markdown, no bullet points, no headers, second person ("you have..."). Be direct and factual, not encouraging or cheerful. Keep each paragraph to 1-3 sentences.
+  const prompt = `You are ${name ? `${name}'s` : "a student's"} personal assistant. Write a short, plain-spoken summary of their day - two short paragraphs, no markdown, no bullet points, no headers, second person ("you have..."). Be direct and factual, not encouraging or cheerful. Keep each paragraph to 1-3 sentences.
 
 Today's calendar events:
 ${listOrNone(todayEvents.map(e => `${e.title} at ${e.date}`))}
@@ -68,24 +68,24 @@ Do not repeat the date. Do not use phrases like "Here is your summary." Do not a
   return rawText.replace(/^```(?:\w+)?\s*/i, '').replace(/```\s*$/i, '').trim()
 }
 
-export async function getMorningSummary(accessToken: string | null): Promise<string> {
+export async function getMorningSummary(userId: string, name: string, accessToken: string | null): Promise<string> {
   const today = pacificDateKey()
 
   const { data: cached } = await supabaseServer
     .from('morning_summaries')
     .select('summary, generated_date')
-    .eq('id', 'default')
-    .single()
+    .eq('user_id', userId)
+    .maybeSingle()
 
   if (cached?.generated_date === today && cached.summary) {
     return cached.summary
   }
 
   try {
-    const summary = await generateSummaryText(accessToken)
+    const summary = await generateSummaryText(userId, name, accessToken)
     await supabaseServer
       .from('morning_summaries')
-      .upsert({ id: 'default', summary, generated_date: today, updated_at: new Date().toISOString() })
+      .upsert({ user_id: userId, summary, generated_date: today, updated_at: new Date().toISOString() })
     return summary
   } catch {
     return cached?.summary || "Here's your day - check the sections below for today's assignments and events."

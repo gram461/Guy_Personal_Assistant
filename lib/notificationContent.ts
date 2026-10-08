@@ -1,17 +1,21 @@
-import { fetchSchoologyEvents } from './schoology'
+import { fetchAssignments } from './assignments'
 import { fetchCalendarEvents } from './googleCalendar'
 import { fetchGmailMessages } from './gmail'
 import { getFreshGoogleAccessToken } from './googleTokenRefresh'
 import { filterTodaySummary, daysUntil } from './summaryFilters'
-import { loadSettings } from './settingsStorage'
+import type { UserSettings } from './settingsStorage'
 import { classifyImportantAssignments } from './assignmentImportance'
 
 export type NotificationSlot = 'morning' | 'afternoon' | 'night'
 
-export async function buildTodaySummary(slot: NotificationSlot): Promise<{ title: string; body: string } | null> {
-  const assignments = await fetchSchoologyEvents()
+export async function buildTodaySummary(
+  userId: string,
+  slot: NotificationSlot,
+  settings: UserSettings,
+): Promise<{ title: string; body: string } | null> {
+  const assignments = await fetchAssignments(userId)
 
-  const accessToken = await getFreshGoogleAccessToken()
+  const accessToken = await getFreshGoogleAccessToken(userId)
   const events = accessToken ? await fetchCalendarEvents(accessToken) : []
   const emails = accessToken ? await fetchGmailMessages(accessToken) : []
   const unreadCount = emails.filter(e => e.unread).length
@@ -30,7 +34,7 @@ export async function buildTodaySummary(slot: NotificationSlot): Promise<{ title
   if (slot === 'morning') {
     if (todayEvents.length === 0 && upcomingAssignments.length === 0 && !alertPrefix) return null
     return {
-      title: 'Good morning, Guy',
+      title: settings.displayName ? `Good morning, ${settings.displayName}` : 'Good morning',
       body: `${alertPrefix}Today: ${todayEvents.length} event${todayEvents.length !== 1 ? 's' : ''}, ${upcomingAssignments.length} assignment${upcomingAssignments.length !== 1 ? 's' : ''} due this week.`,
     }
   }
@@ -47,7 +51,7 @@ export async function buildTodaySummary(slot: NotificationSlot): Promise<{ title
   }
 
   // night
-  const { nightlyChecklist } = await loadSettings()
+  const { nightlyChecklist } = settings
   const checklistPrompts = [
     nightlyChecklist.studied && 'studied',
     nightlyChecklist.workedOut && 'worked out',

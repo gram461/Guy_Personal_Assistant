@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { messaging } from '@/lib/firebaseAdmin'
 import { supabaseServer } from '@/lib/supabaseServer'
-import { loadSettings } from '@/lib/settingsStorage'
+import { loadSettingsForUser } from '@/lib/settingsServer'
 import { buildTodaySummary, type NotificationSlot } from '@/lib/notificationContent'
 
 const VALID_SLOTS: NotificationSlot[] = ['morning', 'afternoon', 'night']
@@ -17,36 +17,50 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid slot' }, { status: 400 })
   }
 
-  const { notifications } = await loadSettings()
-  if (!notifications[slot]) {
-    return NextResponse.json({ skipped: 'slot disabled' })
+  const { data: tokenRows, error } = await supabaseServer.from('push_tokens').select('token, user_id')
+  if (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Failed to load devices' }, { status: 500 })
   }
 
-  const content = await buildTodaySummary(slot)
-  if (!content) {
-    return NextResponse.json({ skipped: 'nothing to report' })
+  const tokensByUser = new Map<string, string[]>()
+  for (const { token, user_id } of tokenRows ?? []) {
+    tokensByUser.set(user_id, [...(tokensByUser.get(user_id) ?? []), token])
   }
 
-  const { data: tokenRows } = await supabaseServer.from('push_tokens').select('token')
-  const tokens = (tokenRows || []).map(r => r.token)
-  if (tokens.length === 0) {
-    return NextResponse.json({ skipped: 'no registered devices' })
-  }
-
-  const result = await messaging.sendEachForMulticast({
-    tokens,
-    notification: { title: content.title, body: content.body },
-  })
-
+  let sent = 0
+  let failed = 0
+  let skipped = 0
   const deadTokens: string[] = []
-  result.responses.forEach((r, i) => {
-    if (!r.success && (r.error?.code === 'messaging/registration-token-not-registered' || r.error?.code === 'messaging/invalid-registration-token')) {
-      deadTokens.push(tokens[i])
+
+  for (const [userId, tokens] of tokensByUser) {
+    try {
+      const settings = await loadSettingsForUser(userId)
+      if (!settings.notifications[slot]) { skipped++; continue }
+
+      const content = await buildTodaySummary(userId, slot, settings)
+      if (!content) { skipped++; continue }
+
+      const result = await messaging.sendEachForMulticast({
+        tokens,
+        notification: { title: content.title, body: content.body },
+      })
+      sent += result.successCount
+      failed += result.failureCount
+      result.responses.forEach((r, i) => {
+        if (!r.success && (r.error?.code === 'messaging/registration-token-not-registered' || r.error?.code === 'messaging/invalid-registration-token')) {
+          deadTokens.push(tokens[i])
+        }
+      })
+    } catch (err) {
+      console.error('Notification failed for one user', err)
+      failed += tokens.length
     }
-  })
+  }
+
   if (deadTokens.length > 0) {
     await supabaseServer.from('push_tokens').delete().in('token', deadTokens)
   }
 
-  return NextResponse.json({ sent: result.successCount, failed: result.failureCount })
+  return NextResponse.json({ users: tokensByUser.size, sent, failed, skipped })
 }

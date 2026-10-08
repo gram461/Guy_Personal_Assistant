@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { Calendar, GraduationCap, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -37,6 +37,7 @@ export default function SettingsTab() {
   const [displayName, setDisplayName] = useState('')
   const [pushState, setPushState] = useState<PushState>('default')
   const [pushBusy, setPushBusy] = useState(false)
+  const [deleteState, setDeleteState] = useState<'idle' | 'confirm' | 'deleting' | 'error'>('idle')
 
   useEffect(() => {
     loadSettings().then(({ notifications, nightlyChecklist, displayName }) => {
@@ -57,6 +58,16 @@ export default function SettingsTab() {
     if (token) await savePushToken(token)
     setPushState(typeof Notification !== 'undefined' ? Notification.permission : 'denied')
     setPushBusy(false)
+  }
+
+  const deleteMyData = async () => {
+    setDeleteState('deleting')
+    const res = await fetch('/api/account-data', { method: 'DELETE' }).catch(() => null)
+    if (!res?.ok) {
+      setDeleteState('error')
+      return
+    }
+    await signOut({ callbackUrl: '/' })
   }
 
   const toggleNotif = (key: keyof NotificationSettings) => {
@@ -155,13 +166,59 @@ export default function SettingsTab() {
         <section aria-labelledby="settings-accounts">
           <SectionHeading title="Connected accounts" />
           <div id="settings-accounts" className="overflow-hidden rounded-2xl bg-card">
-            <AccountRow icon={GraduationCap} label="Schoology" connected />
+            <AccountRow icon={GraduationCap} label="Schoology" connected={false} />
             <div className="h-px bg-border/60" />
             <AccountRow icon={Mail} label="Gmail" connected={!!session} />
             <div className="h-px bg-border/60" />
             <AccountRow icon={Calendar} label="Google Calendar" connected={!!session} />
           </div>
         </section>
+
+        {/* Your data */}
+        {session && (
+          <section aria-labelledby="settings-data">
+            <SectionHeading title="Your data" />
+            <div id="settings-data" className="rounded-2xl bg-card p-4">
+              <p className="text-sm font-semibold text-card-foreground">Delete my data</p>
+              <p className="mt-0.5 text-xs font-medium text-muted-foreground">
+                Removes your settings, completed assignments, notification devices, and saved Google access, then signs you out.
+              </p>
+
+              {deleteState === 'confirm' || deleteState === 'deleting' ? (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={deleteMyData}
+                    disabled={deleteState === 'deleting'}
+                    className="rounded-xl bg-urgent px-4 py-2 text-xs font-bold text-urgent-foreground transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                  >
+                    {deleteState === 'deleting' ? 'Deleting...' : 'Yes, delete everything'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteState('idle')}
+                    disabled={deleteState === 'deleting'}
+                    className="rounded-xl bg-secondary px-4 py-2 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDeleteState('confirm')}
+                  className="mt-3 rounded-xl bg-urgent-muted px-4 py-2 text-xs font-bold text-urgent-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                >
+                  Delete my data
+                </button>
+              )}
+
+              {deleteState === 'error' && (
+                <p className="mt-2 text-xs font-medium text-urgent">Couldn&apos;t delete your data. Please try again.</p>
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )

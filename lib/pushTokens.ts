@@ -1,5 +1,7 @@
-import { supabase } from './supabaseClient'
-
 export async function savePushToken(token: string) {
-  await supabase.from('push_tokens').upsert({ token, last_seen_at: new Date().toISOString() })
+  await fetch('/api/push-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  }).catch(() => {})
 }

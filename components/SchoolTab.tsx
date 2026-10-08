@@ -37,14 +37,14 @@ export default function SchoolTab() {
   const [pendingDone, setPendingDone] = useState<{ event: Event; timeoutId: ReturnType<typeof setTimeout> } | null>(null)
 
   useEffect(() => {
-    fetch('/api/schoology')
+    fetch('/api/assignments')
       .then(r => r.json())
       .then(data => {
         if (data.error) setError(data.error)
-        else setEvents(data.events)
+        else setEvents(data.assignments)
         setLoading(false)
       })
-      .catch(() => { setError('Could not load Schoology data'); setLoading(false) })
+      .catch(() => { setError('Could not load assignments'); setLoading(false) })
   }, [])
 
   const soon = events.filter(e => daysUntil(e.date) >= 0 && daysUntil(e.date) <= 2)
@@ -84,10 +84,10 @@ export default function SchoolTab() {
 
   return (
     <div>
-      <ScreenHeader title="School" subtitle="Live from Schoology" />
+      <ScreenHeader title="School" subtitle="Schoology not connected yet" />
 
       <div className="space-y-2.5 p-4">
-        {loading && <p className="px-1 py-10 text-center text-sm text-muted-foreground">Loading your Schoology assignments...</p>}
+        {loading && <p className="px-1 py-10 text-center text-sm text-muted-foreground">Loading your assignments...</p>}
         {error && <p className="px-1 py-10 text-center text-sm font-medium text-urgent">{error}</p>}
 
         {!loading && !error && (
@@ -111,7 +111,7 @@ export default function SchoolTab() {
             )}
 
             {events.length === 0 && added.length === 0 && (
-              <p className="px-1 py-10 text-center text-sm text-muted-foreground">No upcoming assignments in the next 2 weeks.</p>
+              <p className="px-1 py-10 text-center text-sm text-muted-foreground">Schoology isn&apos;t connected yet. Your assignments will show up here once it is.</p>
             )}
           </>
         )}

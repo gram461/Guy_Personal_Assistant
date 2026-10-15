@@ -1,6 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import { saveGoogleRefreshToken, getFreshGoogleAccessToken } from './googleTokenRefresh'
+import { ensureUser } from './users'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -21,8 +22,9 @@ export const authOptions: NextAuthOptions = {
       if (account) {
         token.accessToken = account.access_token
         token.expiresAt = account.expires_at
-        if (account.refresh_token && token.sub) {
-          await saveGoogleRefreshToken(token.sub, account.refresh_token)
+        if (token.sub) {
+          await ensureUser(token.sub)
+          if (account.refresh_token) await saveGoogleRefreshToken(token.sub, account.refresh_token)
         }
         return token
       }

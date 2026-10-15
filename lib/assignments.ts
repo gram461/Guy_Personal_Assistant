@@ -1,10 +1,9 @@
 import { getCompletedUids } from './completedAssignments'
+import { loadUpcomingAssignments } from './schoologyStore'
 
 export type Assignment = { title: string; date: string; description: string; uid: string }
 
 export async function fetchAssignments(userId: string): Promise<Assignment[]> {
-  // No assignment source yet: the Schoology scraper will feed this list.
-  const assignments: Assignment[] = []
-  const completed = await getCompletedUids(userId)
+  const [assignments, completed] = await Promise.all([loadUpcomingAssignments(userId), getCompletedUids(userId)])
   return assignments.filter(a => !completed.has(a.uid))
 }

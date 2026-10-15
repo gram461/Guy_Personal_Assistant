@@ -3,6 +3,7 @@ import { messaging } from '@/lib/firebaseAdmin'
 import { supabaseServer } from '@/lib/supabaseServer'
 import { loadSettingsForUser } from '@/lib/settingsServer'
 import { buildTodaySummary, type NotificationSlot } from '@/lib/notificationContent'
+import { deleteEndedGradingPeriods } from '@/lib/schoologyStore'
 
 const VALID_SLOTS: NotificationSlot[] = ['morning', 'afternoon', 'night']
 
@@ -15,6 +16,11 @@ export async function GET(req: NextRequest) {
   const slot = req.nextUrl.searchParams.get('slot') as NotificationSlot | null
   if (!slot || !VALID_SLOTS.includes(slot)) {
     return NextResponse.json({ error: 'Invalid slot' }, { status: 400 })
+  }
+
+  // Daily retention rides on the night slot so it doesn't need its own cron job.
+  if (slot === 'night') {
+    await deleteEndedGradingPeriods().catch(err => console.error('Retention cleanup failed', err))
   }
 
   const { data: tokenRows, error } = await supabaseServer.from('push_tokens').select('token, user_id')

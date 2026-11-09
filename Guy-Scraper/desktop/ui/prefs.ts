@@ -18,8 +18,8 @@ function write(key: string, value: string) {
   }
 }
 
-const NAME_KEY = 'bessy-name'
-const DONE_KEY = 'bessy-done'
+const NAME_KEY = 'synergy-name'
+const DONE_KEY = 'synergy-done'
 const MAX_NAME = 40
 const MAX_DONE = 500
 

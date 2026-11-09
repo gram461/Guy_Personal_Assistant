@@ -4,7 +4,7 @@ import { Icon, Notice, type IconName } from './parts'
 import { School } from './School'
 import { Settings } from './Settings'
 import { Today } from './Today'
-import { useBessy } from './useBessy'
+import { useSynergy } from './useSynergy'
 
 const TABS: { id: string; label: string; icon: IconName }[] = [
   { id: 'today', label: 'Today', icon: 'today' },
@@ -15,7 +15,7 @@ const TABS: { id: string; label: string; icon: IconName }[] = [
 ]
 
 export function App() {
-  const app = useBessy()
+  const app = useSynergy()
   const [tab, setTab] = useState('today')
 
   return (
@@ -32,9 +32,9 @@ export function App() {
         ) : tab === 'settings' ? (
           <Settings app={app} />
         ) : tab === 'personal' ? (
-          <NotHere eyebrow="Your own plans" title="Personal" what="Your personal calendar and to-dos live in the web version of Better Bessy." />
+          <NotHere eyebrow="Your own plans" title="Personal" what="Your personal calendar and to-dos live in the web version of Synergy." />
         ) : (
-          <NotHere eyebrow="Your inbox" title="Email" what="Email lives in the web version of Better Bessy." />
+          <NotHere eyebrow="Your inbox" title="Email" what="Email lives in the web version of Synergy." />
         )}
       </main>
       <nav aria-label="Main" className="tabs">

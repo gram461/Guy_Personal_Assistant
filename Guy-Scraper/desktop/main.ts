@@ -140,33 +140,33 @@ function handle<T>(channel: string, action: (event: IpcMainInvokeEvent, ...args:
 
 function registerHandlers() {
   // signedIn only means a Schoology sign-in is saved on this computer; whether Schoology still accepts it is found out on the next sync.
-  handle('bessy:status', async () => ({ ok: true, ...(await store.status()), signedIn: (await schoologyCookies()) !== null }))
+  handle('synergy:status', async () => ({ ok: true, ...(await store.status()), signedIn: (await schoologyCookies()) !== null }))
 
-  handle('bessy:dashboard', async () => ({ ok: true, ...buildDashboard(await store.readTsv()) }))
+  handle('synergy:dashboard', async () => ({ ok: true, ...buildDashboard(await store.readTsv()) }))
 
   // What the grade page works from. The window does the math itself with gradeCalc, so nothing here takes input.
-  handle('bessy:gradebook', async () => ({ ok: true, ...buildGradebook(await store.readTsv()) }))
+  handle('synergy:gradebook', async () => ({ ok: true, ...buildGradebook(await store.readTsv()) }))
 
   // The scores the user typed and the assignments they added, kept in their own encrypted file.
-  handle('bessy:edits', async () => ({ ok: true, edits: await store.readEdits() }))
+  handle('synergy:edits', async () => ({ ok: true, edits: await store.readEdits() }))
 
-  handle('bessy:edits-save', async (_event, edits) => ({ ok: true, edits: await store.saveEdits(edits) }))
+  handle('synergy:edits-save', async (_event, edits) => ({ ok: true, edits: await store.saveEdits(edits) }))
 
-  handle('bessy:sign-out', async () => {
+  handle('synergy:sign-out', async () => {
     const schoology = session.fromPartition(PARTITION)
     await schoology.clearStorageData()
     await schoology.clearCache()
     return { ok: true }
   })
 
-  handle('bessy:sync', async () => {
+  handle('synergy:sync', async () => {
     activeSync ??= runSync().finally(() => {
       activeSync = null
     })
     return activeSync
   })
 
-  handle('bessy:export', async () => {
+  handle('synergy:export', async () => {
     const choice = await dialog.showSaveDialog(mainWindow!, {
       title: 'Export grades',
       message: 'This copy is a plain file that anyone who can open it can read.',
@@ -178,16 +178,16 @@ function registerHandlers() {
     return { ok: true, path: choice.filePath }
   })
 
-  handle('bessy:open-folder', async () => {
+  handle('synergy:open-folder', async () => {
     await mkdir(dataDir(), { recursive: true })
     const problem = await shell.openPath(dataDir())
     return problem ? { ok: false, message: "Couldn't open the folder." } : { ok: true }
   })
 
-  handle('bessy:delete', async () => {
+  handle('synergy:delete', async () => {
     const choice = await dialog.showMessageBox(mainWindow!, {
       type: 'warning',
-      message: 'Delete all of your Better Bessy data?',
+      message: 'Delete all of your Synergy data?',
       detail: 'This permanently deletes your saved grades and signs you out of Schoology in this app. It cannot be undone.',
       buttons: ['Delete everything', 'Cancel'],
       defaultId: 1,
@@ -211,7 +211,7 @@ function createMainWindow() {
     height: 860,
     minWidth: 380,
     minHeight: 560,
-    title: 'Better Bessy',
+    title: 'Synergy',
     backgroundColor: '#F4F5F9',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -245,6 +245,9 @@ if (!app.requestSingleInstanceLock()) {
   app.on('window-all-closed', () => app.quit())
 
   void app.whenReady().then(() => {
+    // A packaged app gets its icon from the installer; running from source needs it set by hand.
+    if (!app.isPackaged && process.platform === 'darwin') app.dock?.setIcon(path.join(__dirname, '..', 'build', 'icon.png'))
+
     for (const ses of [session.defaultSession, session.fromPartition(PARTITION)]) {
       ses.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
       ses.setPermissionCheckHandler(() => false)

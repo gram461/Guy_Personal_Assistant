@@ -3,7 +3,7 @@ import { dateKey, dayNumber, daysBetween, greeting, shortDate, syncedLabel, time
 import { classTitle } from './grades'
 import { Empty, Header, SyncButton } from './parts'
 import { useDisplayName, useDoneAssignments } from './prefs'
-import type { Bessy } from './useBessy'
+import type { Synergy } from './useSynergy'
 
 const COMING_UP_LIMIT = 6
 
@@ -35,7 +35,7 @@ export function summarize(due: DashboardAssignment[], upcoming: DashboardAssignm
   return lines
 }
 
-export function Today({ app }: { app: Bessy }) {
+export function Today({ app }: { app: Synergy }) {
   const [name] = useDisplayName()
   const [done, toggleDone] = useDoneAssignments()
   const now = new Date()

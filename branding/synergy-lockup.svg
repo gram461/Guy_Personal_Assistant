@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 320" role="img" aria-label="Synergy">
+  <defs>
+    <linearGradient id="dusk" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7B5CF0"/>
+      <stop offset="0.55" stop-color="#4B3FC4"/>
+      <stop offset="1" stop-color="#2D2A86"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.3" cy="0.2" r="0.8">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="peach" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFC9A3"/>
+      <stop offset="1" stop-color="#FF9A8B"/>
+    </linearGradient>
+  </defs>
+  <rect width="860" height="320" fill="#FBF6EF"/>
+  <g transform="translate(40 32) scale(0.5)">
+    <rect width="512" height="512" rx="130" fill="url(#dusk)"/>
+    <rect width="512" height="512" rx="130" fill="url(#glow)"/>
+    <g fill="none" stroke-width="64" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M326 188 C326 146 296 124 256 124 C212 124 182 152 182 190 C182 228 212 246 256 256" stroke="#FFF3E4"/>
+      <path d="M256 256 C300 266 330 284 330 322 C330 360 300 388 256 388 C216 388 186 366 186 324" stroke="url(#peach)"/>
+    </g>
+  </g>
+  <text x="340" y="180" font-family="'Avenir Next', 'Nunito', 'Quicksand', 'Helvetica Neue', Arial, sans-serif" font-size="124" font-weight="600" letter-spacing="-2" fill="#2D2A86">synergy</text>
+  <text x="344" y="238" font-family="'Avenir Next', 'Nunito', 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="500" letter-spacing="1.5" fill="#7A6F8F">your grades, close to home</text>
+</svg>

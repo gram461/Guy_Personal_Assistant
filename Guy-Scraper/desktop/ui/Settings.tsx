@@ -1,9 +1,9 @@
 import { syncedLabel } from './dates'
 import { Header } from './parts'
 import { useDisplayName } from './prefs'
-import type { Bessy } from './useBessy'
+import type { Synergy } from './useSynergy'
 
-export function Settings({ app }: { app: Bessy }) {
+export function Settings({ app }: { app: Synergy }) {
   const [name, setName] = useDisplayName()
   const { status } = app.data
   const signedIn = status?.signedIn ?? false
@@ -11,14 +11,14 @@ export function Settings({ app }: { app: Bessy }) {
 
   return (
     <>
-      <Header eyebrow="Customize Better Bessy" title="Settings" />
+      <Header eyebrow="Customize Synergy" title="Settings" />
 
       <section className="card stack" aria-labelledby="profile-h">
         <h2 id="profile-h">Profile</h2>
         <div className="profile">
           <div className="avatar" aria-hidden="true">{initial}</div>
           <label className="field grow">
-            <span>What should Better Bessy call you?</span>
+            <span>What should Synergy call you?</span>
             <input type="text" value={name} maxLength={40} autoComplete="off" onChange={e => setName(e.target.value)} />
           </label>
         </div>
@@ -36,7 +36,7 @@ export function Settings({ app }: { app: Bessy }) {
         <div className="line">
           <div className="grow">
             <div className="strong">Google (Gmail and Calendar)</div>
-            <div className="sub">Not in the desktop app. Better Bessy here only connects to Schoology.</div>
+            <div className="sub">Not in the desktop app. Synergy here only connects to Schoology.</div>
           </div>
           <span className="chip gray">Not available</span>
         </div>
@@ -51,7 +51,7 @@ export function Settings({ app }: { app: Bessy }) {
 
       <section className="card stack" aria-labelledby="data-h">
         <h2 id="data-h">Your data stays on this computer</h2>
-        <p className="body">Your grades and the scores you enter are saved in encrypted files here. Nobody else, including the people who made Better Bessy, can open them.</p>
+        <p className="body">Your grades and the scores you enter are saved in encrypted files here. Nobody else, including the people who made Synergy, can open them.</p>
         <div className="buttons">
           <button type="button" className="primary" onClick={() => void app.exportTsv()}>Export as TSV</button>
           <button type="button" className="secondary" onClick={() => void app.openFolder()}>Show data folder</button>

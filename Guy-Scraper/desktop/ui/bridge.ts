@@ -15,7 +15,7 @@ export type Status = {
   signedIn: boolean
 }
 
-export type Bessy = {
+export type Synergy = {
   status: () => Promise<({ ok: true } & Status) | Failure>
   dashboard: () => Promise<({ ok: true } & Dashboard) | Failure>
   gradebook: () => Promise<({ ok: true } & Gradebook) | Failure>
@@ -30,11 +30,11 @@ export type Bessy = {
 
 declare global {
   interface Window {
-    bessy: Bessy
+    synergy: Synergy
   }
 }
 
-export const bessy = (): Bessy => window.bessy
+export const synergy = (): Synergy => window.synergy
 
 export function failureText(result: Failure, fallback: string): string {
   return result.message ?? fallback

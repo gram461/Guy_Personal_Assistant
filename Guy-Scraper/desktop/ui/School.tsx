@@ -7,7 +7,7 @@ import {
   type ClassView, type Row,
 } from './grades'
 import { Empty, Header, Icon, SyncButton } from './parts'
-import type { Bessy } from './useBessy'
+import type { Synergy } from './useSynergy'
 
 const barWidth = (percent: number | null) => `${percent === null ? 0 : Math.max(0, Math.min(100, percent)).toFixed(2)}%`
 
@@ -95,7 +95,7 @@ function ScoreCell({ row, readOnly, onScore, onPoints, onRemove }: { row: Row; r
   )
 }
 
-function AddAssignment({ view, app }: { view: ClassView; app: Bessy }) {
+function AddAssignment({ view, app }: { view: ClassView; app: Synergy }) {
   const cls = view.cls
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -152,7 +152,7 @@ function AddAssignment({ view, app }: { view: ClassView; app: Bessy }) {
   )
 }
 
-function ClassDetail({ view, app, onBack }: { view: ClassView; app: Bessy; onBack: () => void }) {
+function ClassDetail({ view, app, onBack }: { view: ClassView; app: Synergy; onBack: () => void }) {
   const { cls, original, current } = view
   const letter = cls.gradeLetter
   const rows = useMemo(() => {
@@ -254,7 +254,7 @@ function statusLine(view: ClassView): string {
   return waiting > 0 ? `${open} open · ${waiting} waiting for a grade` : `${open} open`
 }
 
-export function School({ app }: { app: Bessy }) {
+export function School({ app }: { app: Synergy }) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const { gradebook, edits, status } = app.data
   const now = new Date()

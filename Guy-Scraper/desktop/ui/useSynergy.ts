@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Dashboard } from '../../dashboard'
 import type { Gradebook } from '../../gradebook'
 import { emptyEdits, type SavedEdits } from '../../savedEdits'
-import { bessy, failureText, type Status } from './bridge'
+import { synergy, failureText, type Status } from './bridge'
 
 const SAVE_DELAY_MS = 400
 
@@ -13,7 +13,7 @@ export type Data = {
   edits: SavedEdits
 }
 
-export type Bessy = {
+export type Synergy = {
   loaded: boolean
   data: Data
   // Something went wrong loading or saving; shown at the top of every screen.
@@ -33,7 +33,7 @@ export type Bessy = {
 
 const nothing: Data = { status: null, gradebook: null, dashboard: null, edits: emptyEdits() }
 
-export function useBessy(): Bessy {
+export function useSynergy(): Synergy {
   const [data, setData] = useState<Data>(nothing)
   const [loaded, setLoaded] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
@@ -49,7 +49,7 @@ export function useBessy(): Bessy {
     saveTimer.current = null
     if (!dirty.current) return
     dirty.current = false
-    const result = await bessy().saveEdits(editsRef.current)
+    const result = await synergy().saveEdits(editsRef.current)
     if (!result.ok) {
       dirty.current = true
       setProblem(failureText(result, "Your changes couldn't be saved."))
@@ -59,7 +59,7 @@ export function useBessy(): Bessy {
   const reload = useCallback(async () => {
     // Anything typed a moment ago is saved first, so loading can't bring back the old version.
     await flush()
-    const [status, gradebook, dashboard, edits] = await Promise.all([bessy().status(), bessy().gradebook(), bessy().dashboard(), bessy().edits()])
+    const [status, gradebook, dashboard, edits] = await Promise.all([synergy().status(), synergy().gradebook(), synergy().dashboard(), synergy().edits()])
     const failed = [status, gradebook, dashboard, edits].find(r => !r.ok)
     if (failed && !failed.ok) {
       setProblem(failureText(failed, "Your saved grades couldn't be opened."))
@@ -102,7 +102,7 @@ export function useBessy(): Bessy {
     setSyncing(true)
     setNotice(null)
     try {
-      const result = await bessy().sync()
+      const result = await synergy().sync()
       if (!result.ok) {
         setNotice(failureText(result, "Couldn't sync with Schoology."))
         return
@@ -115,7 +115,7 @@ export function useBessy(): Bessy {
   }, [reload])
 
   const signOut = useCallback(async () => {
-    const result = await bessy().signOut()
+    const result = await synergy().signOut()
     if (!result.ok) setNotice(failureText(result, "Couldn't sign out."))
     else {
       setNotice('Signed out of Schoology. Your saved grades are still here.')
@@ -124,18 +124,18 @@ export function useBessy(): Bessy {
   }, [reload])
 
   const exportTsv = useCallback(async () => {
-    const result = await bessy().exportTsv()
+    const result = await synergy().exportTsv()
     if (result.ok) setNotice(`Saved a plain copy to ${result.path}.`)
     else if (!result.canceled) setNotice(failureText(result, "Couldn't export your grades."))
   }, [])
 
   const openFolder = useCallback(async () => {
-    const result = await bessy().openFolder()
+    const result = await synergy().openFolder()
     if (!result.ok) setNotice(failureText(result, "Couldn't open the folder."))
   }, [])
 
   const deleteData = useCallback(async () => {
-    const result = await bessy().deleteData()
+    const result = await synergy().deleteData()
     if (result.ok) {
       // Starts the window over, which also drops the name and checkmarks it kept.
       dirty.current = false

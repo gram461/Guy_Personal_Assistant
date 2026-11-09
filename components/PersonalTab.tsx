@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { CalendarCheck, Plus } from 'lucide-react'
-import { daysUntil } from '@/lib/summaryFilters'
+import { daysUntil, formatDay } from '@/lib/summaryFilters'
 import { ScreenHeader } from '@/components/dashboard/screen-header'
 import { ListCard } from '@/components/dashboard/list-card'
 import { SectionHeading } from '@/components/dashboard/section-heading'
@@ -157,8 +157,7 @@ export default function PersonalTab() {
 
 function EventCard({ event }: { event: Event }) {
   const days = daysUntil(event.date)
-  const date = new Date(event.date)
-  const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const dateStr = formatDay(event.date)
   const time = formatTime(event.date)
   const t = tone(days)
 

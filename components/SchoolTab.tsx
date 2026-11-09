@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { GraduationCap, Plus, Check } from 'lucide-react'
-import { daysUntil } from '@/lib/summaryFilters'
+import { daysUntil, formatDay } from '@/lib/summaryFilters'
 import { ScreenHeader } from '@/components/dashboard/screen-header'
 import { ListCard } from '@/components/dashboard/list-card'
 import { SectionHeading } from '@/components/dashboard/section-heading'
@@ -168,8 +168,7 @@ export default function SchoolTab() {
 
 function AssignmentCard({ event, onDone }: { event: Event; onDone: () => void }) {
   const days = daysUntil(event.date)
-  const date = new Date(event.date)
-  const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const dateStr = formatDay(event.date)
   const time = formatTime(event.date)
   const t = tone(days)
 

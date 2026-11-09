@@ -1,0 +1,51 @@
+{
+  "name": "better-bessy-desktop",
+  "productName": "Better Bessy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Keeps your Schoology grades in an encrypted file on your own computer",
+  "author": "Better Bessy",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "start": "node build.mjs && electron .",
+    "pack": "node build.mjs && electron-builder --dir",
+    "dist": "node build.mjs && electron-builder"
+  },
+  "build": {
+    "appId": "com.betterbessy.desktop",
+    "productName": "Better Bessy",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../data/grades.tsv",
+        "to": "grades.tsv"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "identity": "-",
+      "hardenedRuntime": false
+    },
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "devDependencies": {
+    "electron": "45.2.3",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}

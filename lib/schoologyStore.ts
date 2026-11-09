@@ -1,6 +1,7 @@
 import { supabaseServer } from './supabaseServer'
 import { encryptSecret, decryptSecret } from './tokenCrypto'
 import type { Assignment } from './assignments'
+import type { SchoologySnapshot } from '../Guy-Scraper/snapshot'
 
 const PACIFIC_TZ = 'America/Los_Angeles'
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -13,44 +14,6 @@ function pacificDateKey(date: Date) {
 }
 
 export type SyncStatus = 'ok' | 'session_expired' | 'failed'
-export type AssignmentStatus = 'ungraded' | 'graded' | 'missing' | 'excused'
-
-export type GradingPeriodSnapshot = { periodId: string; name: string; startsOn: string; endsOn: string }
-export type CourseSnapshot = {
-  periodId: string
-  sectionId: string
-  name: string
-  gradePercent: number | null
-  gradeLetter: string | null
-}
-export type CategorySnapshot = {
-  periodId: string
-  sectionId: string
-  categoryId: string
-  name: string
-  weight: number | null
-}
-export type AssignmentSnapshot = {
-  periodId: string
-  sectionId: string
-  assignmentId: string
-  categoryId: string | null
-  title: string
-  description: string
-  // For all-day items (dueAllDay), any time on the due date in Pacific time.
-  dueAt: string | null
-  dueAllDay: boolean
-  score: number | null
-  maxPoints: number | null
-  status: AssignmentStatus
-  isLate: boolean
-}
-export type SchoologySnapshot = {
-  gradingPeriods: GradingPeriodSnapshot[]
-  courses: CourseSnapshot[]
-  categories: CategorySnapshot[]
-  assignments: AssignmentSnapshot[]
-}
 
 export async function saveSchoologySession(
   userId: string,
@@ -110,6 +73,7 @@ export async function saveSchoologySnapshot(userId: string, snapshot: SchoologyS
         period_id: c.periodId,
         section_id: c.sectionId,
         name: c.name,
+        teacher_name: c.teacherName,
         grade_percent: c.gradePercent,
         grade_letter: c.gradeLetter,
       })),
@@ -131,8 +95,10 @@ export async function saveSchoologySnapshot(userId: string, snapshot: SchoologyS
         due_all_day: a.dueAllDay,
         score: a.score,
         max_points: a.maxPoints,
+        grade_text: a.gradeText,
         status: a.status,
         is_late: a.isLate,
+        has_submission: a.hasSubmission,
       })),
     },
   })
@@ -147,6 +113,7 @@ export async function loadUpcomingAssignments(userId: string): Promise<Assignmen
     .from('assignments')
     .select('assignment_id, title, description, due_at, due_all_day')
     .eq('user_id', userId)
+    .in('status', ['ungraded', 'missing'])
     .gte('due_at', from)
     .lte('due_at', to)
     .order('due_at')

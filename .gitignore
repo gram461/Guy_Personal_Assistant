@@ -40,3 +40,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Real grades written by the scraper (test copies); the shipped Guy-Scraper/data/grades.tsv stays header-only
+Guy-Scraper/data/*.local.tsv
+
+# Desktop app: installed tools and build output
+Guy-Scraper/desktop/node_modules/
+Guy-Scraper/desktop/dist/
+Guy-Scraper/desktop/release/

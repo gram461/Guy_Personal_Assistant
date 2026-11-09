@@ -1,6 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
-import { saveGoogleRefreshToken, getFreshGoogleAccessToken } from './googleTokenRefresh'
+import { saveGoogleRefreshToken } from './googleTokenRefresh'
 import { ensureUser } from './users'
 
 export const authOptions: NextAuthOptions = {
@@ -18,31 +18,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    // The sign-in cookie only says who the person is. Google tokens never go in it or in the session the browser can read:
+    // the encrypted refresh token is saved on the server, and short-lived access tokens are fetched from it when needed.
     async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token
-        token.expiresAt = account.expires_at
-        if (token.sub) {
-          await ensureUser(token.sub)
-          if (account.refresh_token) await saveGoogleRefreshToken(token.sub, account.refresh_token)
-        }
-        return token
-      }
-
-      const expiresAt = (token.expiresAt as number | undefined) ?? 0
-      if (Date.now() < expiresAt * 1000 - 5 * 60 * 1000 || !token.sub) {
-        return token
-      }
-
-      const freshAccessToken = await getFreshGoogleAccessToken(token.sub)
-      if (freshAccessToken) {
-        token.accessToken = freshAccessToken
-        token.expiresAt = Math.floor(Date.now() / 1000) + 3600
+      if (account && token.sub) {
+        await ensureUser(token.sub)
+        if (account.refresh_token) await saveGoogleRefreshToken(token.sub, account.refresh_token)
       }
       return token
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string | undefined
       if (token.sub) session.user.id = token.sub
       return session
     },

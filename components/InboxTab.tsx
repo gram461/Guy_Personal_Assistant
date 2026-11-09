@@ -38,6 +38,8 @@ export default function InboxTab() {
   const [emails, setEmails] = useState<Email[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // Google no longer accepts the saved sign-in (access was removed, or it expired), so the person signs in again.
+  const [needsReconnect, setNeedsReconnect] = useState(false)
 
   useEffect(() => {
     if (!session) return
@@ -45,7 +47,8 @@ export default function InboxTab() {
     fetch('/api/gmail')
       .then(r => r.json())
       .then(data => {
-        if (data.error) setError(data.error)
+        if (data.error === 'reconnect_google') setNeedsReconnect(true)
+        else if (data.error) setError(data.error)
         else setEmails(data.emails || [])
       })
       .catch(() => setError('Failed to load emails'))
@@ -59,13 +62,13 @@ export default function InboxTab() {
     <div>
       <ScreenHeader title="Inbox" subtitle="Emails that matter to you" />
 
-      {!session ? (
+      {!session || needsReconnect ? (
         <main className="flex flex-1 flex-col items-center justify-center gap-6 px-8 pb-16 pt-16 text-center">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-brand-muted text-primary-foreground">
             <Mail className="size-7" strokeWidth={2.25} aria-hidden="true" />
           </div>
           <p className="max-w-xs text-pretty text-base font-medium text-muted-foreground">
-            Connect Gmail to see emails that matter to you
+            {needsReconnect ? 'Google needs you to sign in again to keep showing your email' : 'Connect Gmail to see emails that matter to you'}
           </p>
           <button
             type="button"

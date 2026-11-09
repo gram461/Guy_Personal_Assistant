@@ -1,5 +1,5 @@
 import { fetchAssignments } from './assignments'
-import { fetchCalendarEvents } from './googleCalendar'
+import { calendarEventsOrNone } from './googleData'
 import { classifyImportantAssignments } from './assignmentImportance'
 import { filterTodaySummary, daysUntil } from './summaryFilters'
 import { supabaseServer } from './supabaseServer'
@@ -12,10 +12,10 @@ function listOrNone(items: string[]) {
   return items.length > 0 ? items.join('; ') : 'none'
 }
 
-async function generateSummaryText(userId: string, name: string, accessToken: string | null): Promise<string> {
+async function generateSummaryText(userId: string, name: string): Promise<string> {
   const [assignments, events] = await Promise.all([
     fetchAssignments(userId),
-    accessToken ? fetchCalendarEvents(accessToken) : Promise.resolve([]),
+    calendarEventsOrNone(userId),
   ])
 
   const { todayEvents, upcomingEvents, upcomingAssignments } = filterTodaySummary(events, assignments)
@@ -68,7 +68,7 @@ Do not repeat the date. Do not use phrases like "Here is your summary." Do not a
   return rawText.replace(/^```(?:\w+)?\s*/i, '').replace(/```\s*$/i, '').trim()
 }
 
-export async function getMorningSummary(userId: string, name: string, accessToken: string | null): Promise<string> {
+export async function getMorningSummary(userId: string, name: string): Promise<string> {
   const today = pacificDateKey()
 
   const { data: cached } = await supabaseServer
@@ -82,7 +82,7 @@ export async function getMorningSummary(userId: string, name: string, accessToke
   }
 
   try {
-    const summary = await generateSummaryText(userId, name, accessToken)
+    const summary = await generateSummaryText(userId, name)
     await supabaseServer
       .from('morning_summaries')
       .upsert({ user_id: userId, summary, generated_date: today, updated_at: new Date().toISOString() })

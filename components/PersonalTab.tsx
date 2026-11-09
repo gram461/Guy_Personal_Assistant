@@ -34,6 +34,8 @@ export default function PersonalTab() {
   const { data: session } = useSession()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(false)
+  // Google no longer accepts the saved sign-in (access was removed, or it expired), so the person signs in again.
+  const [needsReconnect, setNeedsReconnect] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [added, setAdded] = useState<{ title: string; sub: string }[]>([])
 
@@ -42,7 +44,11 @@ export default function PersonalTab() {
     setLoading(true)
     fetch('/api/calendar')
       .then(r => r.json())
-      .then(data => { setEvents(data.events || []); setLoading(false) })
+      .then(data => {
+        if (data.error === 'reconnect_google') setNeedsReconnect(true)
+        setEvents(data.events || [])
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
   }, [session])
 
@@ -57,13 +63,13 @@ export default function PersonalTab() {
     <div>
       <ScreenHeader title="Personal" subtitle="Your events & family calendar" />
 
-      {!session ? (
+      {!session || needsReconnect ? (
         <main className="flex flex-1 flex-col items-center justify-center gap-6 px-8 pb-16 pt-16 text-center">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-brand-muted text-primary-foreground">
             <CalendarCheck className="size-7" strokeWidth={2.25} aria-hidden="true" />
           </div>
           <p className="max-w-xs text-pretty text-base font-medium text-muted-foreground">
-            Connect Google Calendar to see your events
+            {needsReconnect ? 'Google needs you to sign in again to keep showing your calendar' : 'Connect Google Calendar to see your events'}
           </p>
           <button
             type="button"

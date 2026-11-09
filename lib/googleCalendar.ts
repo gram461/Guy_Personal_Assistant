@@ -1,4 +1,8 @@
+import { GoogleTokenRejectedError } from './googleApi'
+
 export type CalendarEvent = { title: string; date: string; location: string }
+
+type RawEvent = { summary?: string; location?: string; start?: { dateTime?: string; date?: string } }
 
 export async function fetchCalendarEvents(accessToken: string): Promise<CalendarEvent[]> {
   const now = new Date().toISOString()
@@ -9,15 +13,13 @@ export async function fetchCalendarEvents(accessToken: string): Promise<Calendar
     { headers: { Authorization: `Bearer ${accessToken}` } }
   )
 
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Failed to fetch calendar: ${err}`)
-  }
+  if (res.status === 401) throw new GoogleTokenRejectedError()
+  if (!res.ok) throw new Error(`Google Calendar answered ${res.status}`)
 
-  const data = await res.json()
-  return (data.items || []).map((e: any) => ({
+  const data = (await res.json()) as { items?: RawEvent[] }
+  return (data.items || []).map(e => ({
     title: e.summary || 'Untitled',
-    date: e.start?.dateTime || e.start?.date,
+    date: e.start?.dateTime || e.start?.date || '',
     location: e.location || '',
   }))
 }

@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const { displayName } = await loadSettingsForUser(user.id)
     const name = displayName || user.name?.split(' ')[0] || ''
-    const summary = await getMorningSummary(user.id, name, user.accessToken)
+    const summary = await getMorningSummary(user.id, name)
     return NextResponse.json({ summary })
   } catch (err) {
     console.error(err)

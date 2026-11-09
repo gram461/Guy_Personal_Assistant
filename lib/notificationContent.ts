@@ -1,7 +1,5 @@
 import { fetchAssignments } from './assignments'
-import { fetchCalendarEvents } from './googleCalendar'
-import { fetchGmailMessages } from './gmail'
-import { getFreshGoogleAccessToken } from './googleTokenRefresh'
+import { calendarEventsOrNone, gmailMessagesOrNone } from './googleData'
 import { filterTodaySummary, daysUntil } from './summaryFilters'
 import type { UserSettings } from './settingsStorage'
 import { classifyImportantAssignments } from './assignmentImportance'
@@ -15,9 +13,7 @@ export async function buildTodaySummary(
 ): Promise<{ title: string; body: string } | null> {
   const assignments = await fetchAssignments(userId)
 
-  const accessToken = await getFreshGoogleAccessToken(userId)
-  const events = accessToken ? await fetchCalendarEvents(accessToken) : []
-  const emails = accessToken ? await fetchGmailMessages(accessToken) : []
+  const [events, emails] = await Promise.all([calendarEventsOrNone(userId), gmailMessagesOrNone(userId)])
   const unreadCount = emails.filter(e => e.unread).length
 
   const { todayEvents, upcomingAssignments, urgentItems } = filterTodaySummary(events, assignments)

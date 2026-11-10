@@ -1,7 +1,7 @@
 {
-  "name": "Guy's Personal Assistant",
-  "short_name": "Assistant",
-  "description": "Your smart daily assistant",
+  "name": "Synergy",
+  "short_name": "Synergy",
+  "description": "Your school, calendar, and inbox in one place.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Guy's Personal Assistant",
-  description: "Your smart daily assistant",
+  title: "Synergy",
+  description: "Your school, calendar, and inbox in one place.",
   manifest: "/manifest.json",
   icons: {
     icon: "/icon-192.png",

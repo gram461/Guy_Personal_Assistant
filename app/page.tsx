@@ -6,6 +6,7 @@ import SchoolTab from '@/components/SchoolTab'
 import PersonalTab from '@/components/PersonalTab'
 import InboxTab from '@/components/InboxTab'
 import SettingsTab from '@/components/SettingsTab'
+import Link from 'next/link'
 import { TabBar, type TabKey } from '@/components/dashboard/tab-bar'
 
 export default function Home() {
@@ -19,6 +20,10 @@ export default function Home() {
         {activeTab === 'personal' && <PersonalTab />}
         {activeTab === 'inbox' && <InboxTab />}
         {activeTab === 'settings' && <SettingsTab />}
+        <footer className="flex justify-center gap-5 px-4 pb-28 pt-6 text-xs text-muted-foreground">
+          <Link href="/privacy" className="hover:underline">Privacy policy</Link>
+          <Link href="/terms" className="hover:underline">Terms of service</Link>
+        </footer>
       </div>
       <TabBar active={activeTab} onChange={setActiveTab} />
     </div>

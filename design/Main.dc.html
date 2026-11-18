@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Today</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:#161A2E;background:#F4F5F9}
+a{color:inherit;text-decoration:none}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font-family:inherit}
+.app{--bg:#F4F5F9;--card:#FFFFFF;--line:#E3E6EF;--soft-line:#EDEFF5;--text:#161A2E;--muted:#5B6178;--body:#3A4060;--accent:#3347E6;--accent-fill:#3347E6;--accent-strong:#2536B8;--accent-soft:#E8EBFB;--track:#E4E7F1;--btn-line:#D5D9E6;--input-line:#BFC5D9;--check-line:#7C84A3;--green-bg:#DDF3EC;--green-fg:#0B5A53;--gray-bg:#E9E9E6;--gray-fg:#4A4A45;--chip-bg:#EEF0F6;--dashed-bg:#F5F6FF;--dashed-line:#9AA4D6;--warn-bg:#FFF4EA;--warn-line:#F1C9A5;--warn-chip:#FFE0C2;--warn-fg:#8A3B05;--warn-strong:#6B2D04;--red:#B42318;--danger-bg:#FFF7F6;--danger-line:#F0C4BF;--danger-strong:#8E1B10;--danger-body:#4A2420;--banner-line:#C9D0F5;--chip-on-bg:#12172B;--chip-on-fg:#FFFFFF}
+@media (prefers-color-scheme: dark){.app:not([data-theme="light"]){--bg:#101120;--card:#1A1C2E;--line:#2D3050;--soft-line:#25283F;--text:#EDEFFA;--muted:#A9AEC9;--body:#C7CBE2;--accent:#93A3FF;--accent-fill:#4A5CF0;--accent-strong:#B4BFFF;--accent-soft:#272C5A;--track:#2B2E4C;--btn-line:#3A3E63;--input-line:#4A4F78;--check-line:#7F86B0;--green-bg:#123B35;--green-fg:#7FE0CB;--gray-bg:#2B2D3B;--gray-fg:#C9CBD6;--chip-bg:#25283F;--dashed-bg:#20244A;--dashed-line:#5A64A8;--warn-bg:#3A2616;--warn-line:#6B4527;--warn-chip:#5A3A1C;--warn-fg:#FFC891;--warn-strong:#FFDDB8;--red:#FF8F85;--danger-bg:#3A1B1A;--danger-line:#7A3430;--danger-strong:#FFA79E;--danger-body:#F2C9C5;--banner-line:#3C4388;--chip-on-bg:#EDEFFA;--chip-on-fg:#101120;color-scheme:dark}}
+.app[data-theme="dark"]{--bg:#101120;--card:#1A1C2E;--line:#2D3050;--soft-line:#25283F;--text:#EDEFFA;--muted:#A9AEC9;--body:#C7CBE2;--accent:#93A3FF;--accent-fill:#4A5CF0;--accent-strong:#B4BFFF;--accent-soft:#272C5A;--track:#2B2E4C;--btn-line:#3A3E63;--input-line:#4A4F78;--check-line:#7F86B0;--green-bg:#123B35;--green-fg:#7FE0CB;--gray-bg:#2B2D3B;--gray-fg:#C9CBD6;--chip-bg:#25283F;--dashed-bg:#20244A;--dashed-line:#5A64A8;--warn-bg:#3A2616;--warn-line:#6B4527;--warn-chip:#5A3A1C;--warn-fg:#FFC891;--warn-strong:#FFDDB8;--red:#FF8F85;--danger-bg:#3A1B1A;--danger-line:#7A3430;--danger-strong:#FFA79E;--danger-body:#F2C9C5;--banner-line:#3C4388;--chip-on-bg:#EDEFFA;--chip-on-fg:#101120;color-scheme:dark}
+</style>
+</helmet>
+<div class="app" data-theme="{{ theme }}" style="width:390px;height:844px;display:flex;flex-direction:column;background:var(--bg);overflow:hidden">
+
+<main style="flex:1;min-height:0;overflow-y:auto;padding:28px 20px 28px;display:flex;flex-direction:column;gap:16px">
+
+  <header style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--muted)">Wednesday, November 11</div>
+      <h1 style="margin:4px 0 0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:30px;line-height:1.15;letter-spacing:-0.01em">Good morning, Alex</h1>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">{{ syncText }}</div>
+    </div>
+    <button type="button" aria-label="Sync from Schoology" onClick="{{ sync }}" style="width:44px;height:44px;border:0;border-radius:12px;background:var(--card);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;box-shadow:0 0 0 1px var(--line) inset">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/></svg>
+    </button>
+  </header>
+
+  <section aria-labelledby="summary-h" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:12px">
+    <h2 id="summary-h" style="margin:0;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent)">Your morning summary</h2>
+    <p style="margin:0;font-size:16px;line-height:1.55">You have three assignments due today: a vocabulary quiz in English 11, the flame test pre-lab in Chemistry, and CYU 3.4 in Algebra 2. None are high-stakes.</p>
+    <p style="margin:0;font-size:16px;line-height:1.55">Tomorrow is the Unit 3 Test in Algebra 2. Project 6 in Photography is due Friday.</p>
+  </section>
+
+  <a href="School.dc.html" style="display:flex;align-items:center;gap:12px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:16px;padding:14px 16px">
+    <div style="width:40px;height:40px;border-radius:10px;background:var(--warn-chip);color:var(--warn-fg);display:flex;align-items:center;justify-content:center;flex:none">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h0"/></svg>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:15px;color:var(--warn-strong)">Unit 3 Test: Polynomial functions</div>
+      <div style="font-size:13px;color:var(--warn-fg);margin-top:2px">Algebra 2 · Due tomorrow · High-stakes</div>
+    </div>
+  </a>
+
+  <section aria-labelledby="due-h" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px 8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:6px">
+      <h2 id="due-h" style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px">Due today</h2>
+      <span style="height:26px;min-width:26px;border-radius:13px;background:var(--accent-soft);color:var(--accent-strong);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 8px;box-sizing:border-box">3</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;padding:6px 0;border-top:1px solid var(--soft-line)">
+      <button type="button" aria-label="Mark Vocabulary quiz 3.2 done" style="width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;flex:none;margin-left:-8px"><span style="width:24px;height:24px;border:2px solid var(--check-line);border-radius:50%;box-sizing:border-box"></span></button>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">Vocabulary quiz 3.2</div><div style="font-size:13px;color:var(--muted);margin-top:2px">English 11 · All day</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;padding:6px 0;border-top:1px solid var(--soft-line)">
+      <button type="button" aria-label="Mark Pre-lab questions: Flame tests done" style="width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;flex:none;margin-left:-8px"><span style="width:24px;height:24px;border:2px solid var(--check-line);border-radius:50%;box-sizing:border-box"></span></button>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">Pre-lab questions: Flame tests</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Chemistry H · 11:59 PM</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;padding:6px 0;border-top:1px solid var(--soft-line)">
+      <button type="button" aria-label="Mark CYU 3.4 done" style="width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;flex:none;margin-left:-8px"><span style="width:24px;height:24px;border:2px solid var(--check-line);border-radius:50%;box-sizing:border-box"></span></button>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">CYU 3.4</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Algebra 2 · All day</div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="soon-h" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px 8px">
+    <h2 id="soon-h" style="margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px">Coming up</h2>
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--soft-line)">
+      <div style="width:44px;text-align:center;flex:none"><div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase">Thu</div><div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;line-height:1.1">12</div></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">Unit 3 Test: Polynomial functions</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Algebra 2</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--soft-line)">
+      <div style="width:44px;text-align:center;flex:none"><div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase">Fri</div><div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;line-height:1.1">13</div></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">Project 6: Found alphabet</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Photography 1 · 11:59 PM</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--soft-line)">
+      <div style="width:44px;text-align:center;flex:none"><div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase">Fri</div><div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;line-height:1.1">13</div></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">Industrial revolution project: slides</div><div style="font-size:13px;color:var(--muted);margin-top:2px">World History · 8:30 AM</div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="cal-h" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px 12px">
+    <h2 id="cal-h" style="margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px">Today's calendar</h2>
+    <div style="display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--soft-line)"><div style="width:4px;border-radius:2px;background:var(--accent-fill);flex:none"></div><div><div style="font-weight:600;font-size:15px">Wellness activity</div><div style="font-size:13px;color:var(--muted);margin-top:2px">10:50 AM</div></div></div>
+    <div style="display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--soft-line)"><div style="width:4px;border-radius:2px;background:var(--accent-fill);flex:none"></div><div><div style="font-weight:600;font-size:15px">Robotics club</div><div style="font-size:13px;color:var(--muted);margin-top:2px">3:30 PM · Room 214</div></div></div>
+    <div style="display:flex;gap:12px;padding:10px 0 0;border-top:1px solid var(--soft-line)"><div style="width:4px;border-radius:2px;background:var(--accent-fill);flex:none"></div><div><div style="font-weight:600;font-size:15px">Dentist appointment</div><div style="font-size:13px;color:var(--muted);margin-top:2px">6:00 PM</div></div></div>
+  </section>
+
+</main>
+
+<nav aria-label="Main" style="flex:none;display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 6px 22px">
+  <a href="Main.dc.html" aria-current="page" style="flex:1;min-width:0;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--accent);font-size:11.5px;font-weight:700">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    Today
+  </a>
+  <a href="Personal.dc.html" style="flex:1;min-width:0;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:11.5px;font-weight:600">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+    Personal
+  </a>
+  <a href="School.dc.html" style="flex:1;min-width:0;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:11.5px;font-weight:600">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>
+    School
+  </a>
+  <a href="Email.dc.html" style="flex:1;min-width:0;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:11.5px;font-weight:600">
+    <span style="position:relative;display:flex"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span style="position:absolute;top:-6px;right:-12px;min-width:18px;height:18px;border-radius:9px;background:var(--accent-fill);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;box-sizing:border-box">3</span></span>
+    Email
+  </a>
+  <a href="Settings.dc.html" style="flex:1;min-width:0;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:11.5px;font-weight:600">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+    Settings
+  </a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["system","light","dark"],"default":"system","section":"Appearance"},"$preview":{"width":390,"height":844}}'>
+const THEME_KEY = 'synergy-design-theme';
+
+class Component extends DCLogic {
+  themeInit() {
+    this.themeLoad();
+    try {
+      this.onThemeStorage = (e) => { if (e.key === THEME_KEY) this.themeLoad(); };
+      window.addEventListener('storage', this.onThemeStorage);
+    } catch (e) {
+      // No storage here: this screen just keeps its own choice.
+    }
+  }
+
+  themeLoad() {
+    try {
+      const v = window.localStorage.getItem(THEME_KEY);
+      if (v === 'light' || v === 'dark' || v === 'system') this.setState({ theme: v });
+    } catch (e) {
+      // Storage unavailable: keep the default.
+    }
+  }
+
+  themeNow() {
+    const t = this.state.theme;
+    return t === 'light' || t === 'dark' || t === 'system' ? t : (this.props.theme ?? 'system');
+  }
+
+  componentWillUnmount() {
+    try { window.removeEventListener('storage', this.onThemeStorage); } catch (e) {}
+  }
+
+  componentDidMount() {
+    this.themeInit();
+  }
+
+constructor(props) {
+super(props);
+this.state = { synced: false };
+}
+renderVals() {
+return {
+theme: this.themeNow(),
+syncText: this.state.synced ? 'Synced just now' : 'Synced 9:02 AM',
+sync: () => this.setState({ synced: true }),
+};
+}
+}
+</script>
+</body>
+</html>

@@ -46,9 +46,9 @@ export function Header({ eyebrow, title, note, action }: { eyebrow: string; titl
   )
 }
 
-export function SyncButton({ syncing, onSync }: { syncing: boolean; onSync: () => void }) {
+export function SyncButton({ syncing, onSync, label = 'Sync from Schoology' }: { syncing: boolean; onSync: () => void; label?: string }) {
   return (
-    <button type="button" className={`icon-button${syncing ? ' spinning' : ''}`} aria-label={syncing ? 'Syncing with Schoology' : 'Sync from Schoology'} disabled={syncing} onClick={onSync}>
+    <button type="button" className={`icon-button${syncing ? ' spinning' : ''}`} aria-label={syncing ? 'Working…' : label} disabled={syncing} onClick={onSync}>
       <Icon name="sync" size={20} />
     </button>
   )
@@ -60,6 +60,21 @@ export function Notice({ text, onDismiss, tone = 'info' }: { text: string; onDis
       <span>{text}</span>
       <button type="button" aria-label="Dismiss" onClick={onDismiss}>
         <Icon name="close" size={16} />
+      </button>
+    </div>
+  )
+}
+
+// Shown on every tab while no Schoology sign-in is saved, so signing in never needs hunting for.
+export function SignInBanner({ busy, onSignIn }: { busy: boolean; onSignIn: () => void }) {
+  return (
+    <div className="signin-banner">
+      <div className="grow">
+        <div className="strong">Not signed in to Schoology</div>
+        <div className="sub">Sign in to bring your classes and grades here. Your password is never saved.</div>
+      </div>
+      <button type="button" className="primary" disabled={busy} onClick={onSignIn}>
+        {busy ? 'Signing in…' : 'Sign in to Schoology'}
       </button>
     </div>
   )

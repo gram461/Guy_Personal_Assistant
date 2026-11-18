@@ -1,9 +1,12 @@
 import type { Dashboard } from '../../dashboard'
 import type { Gradebook } from '../../gradebook'
+import type { CalendarEvent, GoogleStatus, MailMessage } from '../../google/types'
 import type { SavedEdits } from '../../savedEdits'
 
+export type { CalendarEvent, GoogleStatus, MailMessage }
+
 // What the window may ask the program for. Every answer is either what was asked for or { ok: false } with a plain message.
-export type Failure = { ok: false; message?: string; canceled?: boolean }
+export type Failure = { ok: false; message?: string; canceled?: boolean; reconnect?: boolean }
 
 export type Status = {
   dataFolder: string
@@ -22,6 +25,13 @@ export type Synergy = {
   edits: () => Promise<{ ok: true; edits: SavedEdits } | Failure>
   saveEdits: (edits: SavedEdits) => Promise<{ ok: true; edits: SavedEdits } | Failure>
   sync: () => Promise<{ ok: true; classes: number; assignments: number } | Failure>
+  googleStatus: () => Promise<({ ok: true } & GoogleStatus) | Failure>
+  googleConnect: () => Promise<({ ok: true } & GoogleStatus) | Failure>
+  googleDisconnect: () => Promise<{ ok: true } | Failure>
+  calendar: (from: string, to: string) => Promise<{ ok: true; events: CalendarEvent[] } | Failure>
+  mail: () => Promise<{ ok: true; messages: MailMessage[] } | Failure>
+  openExternal: (url: string) => Promise<{ ok: true } | Failure>
+  signIn: () => Promise<{ ok: true; classes: number; assignments: number } | Failure>
   signOut: () => Promise<{ ok: true } | Failure>
   exportTsv: () => Promise<{ ok: true; path: string } | Failure>
   openFolder: () => Promise<{ ok: true } | Failure>

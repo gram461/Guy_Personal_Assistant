@@ -48,3 +48,5 @@ Guy-Scraper/data/*.local.tsv
 Guy-Scraper/desktop/node_modules/
 Guy-Scraper/desktop/dist/
 Guy-Scraper/desktop/release/
+# The Google client ID for a build (copy google-client.example.json to google-client.json)
+Guy-Scraper/desktop/google-client.json

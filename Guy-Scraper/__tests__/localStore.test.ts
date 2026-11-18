@@ -236,6 +236,58 @@ describe('LocalGradesStore', () => {
     })
   })
 
+  describe('saved Google sign-in', () => {
+    const login = { refreshToken: 'refresh-secret-123', email: 'me@school.example' }
+
+    it('starts as not connected', async () => {
+      const { store } = await setup()
+      expect(await store.readGoogle()).toBeNull()
+    })
+
+    it('is kept encrypted, and is still there after the app is closed and opened again', async () => {
+      const { dir, store } = await setup()
+      await store.saveGoogle(login)
+      const onDisk = (await readFile(path.join(dir, 'google.enc'))).toString('latin1')
+      expect(onDisk).not.toContain('refresh-secret-123')
+      expect(onDisk).not.toContain('school.example')
+      expect((await stat(path.join(dir, 'google.enc'))).mode & 0o077).toBe(0)
+
+      const reopened = new LocalGradesStore({ dir, templatePath: DEFAULT_GRADES_PATH, protector: protectorWith(0x5a) })
+      expect(await reopened.readGoogle()).toEqual(login)
+    })
+
+    it('survives a new sync of the grades, and can be cleared on its own', async () => {
+      const { dir, store } = await setup()
+      await store.saveGoogle(login)
+      await store.save(snapshot)
+      expect(await store.readGoogle()).toEqual(login)
+      await store.clearGoogle()
+      expect(await store.readGoogle()).toBeNull()
+      expect(await files(dir)).toEqual(['grades.key', 'grades.tsv.enc'])
+    })
+
+    it('is deleted with everything else', async () => {
+      const { dir, store } = await setup()
+      await store.saveGoogle(login)
+      await store.deleteAll()
+      expect(await files(dir)).toEqual([])
+    })
+
+    it('reads a damaged or swapped-in file as not connected', async () => {
+      const { dir, store } = await setup()
+      await store.saveGoogle(login)
+      const file = path.join(dir, 'google.enc')
+      const bytes = await readFile(file)
+      bytes[bytes.length - 1] ^= 1
+      await writeFile(file, bytes)
+      expect(await store.readGoogle()).toBeNull()
+
+      await store.save(snapshot)
+      await writeFile(file, await readFile(path.join(dir, 'grades.tsv.enc')))
+      expect(await store.readGoogle()).toBeNull()
+    })
+  })
+
   it('creates one key even when two operations start at the same time', async () => {
     const { dir, store } = await setup()
     await Promise.all([store.status(), store.save(snapshot), store.status()])

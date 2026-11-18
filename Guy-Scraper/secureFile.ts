@@ -7,6 +7,7 @@ const TAG_BYTES = 16
 // Ties the ciphertext to one kind of file, so a file of another kind can't be swapped in.
 export const GRADES_CONTEXT = 'guy-scraper:grades:v1'
 export const EDITS_CONTEXT = 'guy-scraper:edits:v1'
+export const GOOGLE_CONTEXT = 'guy-scraper:google:v1'
 
 function checkKey(key: Buffer) {
   if (key.length !== 32) throw new Error('Encryption key must be 32 bytes')

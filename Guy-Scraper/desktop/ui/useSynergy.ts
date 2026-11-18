@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Dashboard } from '../../dashboard'
 import type { Gradebook } from '../../gradebook'
 import { emptyEdits, type SavedEdits } from '../../savedEdits'
-import { synergy, failureText, type Status } from './bridge'
+import { synergy, failureText, type GoogleStatus, type MailMessage, type Status } from './bridge'
 
 const SAVE_DELAY_MS = 400
 
@@ -11,6 +11,17 @@ export type Data = {
   gradebook: Gradebook | null
   dashboard: Dashboard | null
   edits: SavedEdits
+  // null until the first load finishes
+  google: GoogleStatus | null
+}
+
+// The inbox, kept here so the tab bar can show the unread count and the Email screen opens already filled.
+export type Mail = {
+  messages: MailMessage[] | null
+  loading: boolean
+  error: string | null
+  // Google no longer accepts the saved sign-in.
+  needsReconnect: boolean
 }
 
 export type Synergy = {
@@ -23,15 +34,23 @@ export type Synergy = {
   notice: string | null
   dismiss: () => void
   sync: () => Promise<void>
+  // Opens the Schoology login window every time, to sign in again or switch accounts, then syncs.
+  signIn: () => Promise<void>
   changeEdits: (change: (edits: SavedEdits) => SavedEdits) => void
   reload: () => Promise<void>
   signOut: () => Promise<void>
   exportTsv: () => Promise<void>
   openFolder: () => Promise<void>
   deleteData: () => Promise<void>
+  mail: Mail
+  refreshMail: () => Promise<void>
+  googleBusy: boolean
+  connectGoogle: () => Promise<void>
+  disconnectGoogle: () => Promise<void>
 }
 
-const nothing: Data = { status: null, gradebook: null, dashboard: null, edits: emptyEdits() }
+const nothing: Data = { status: null, gradebook: null, dashboard: null, edits: emptyEdits(), google: null }
+const noMail: Mail = { messages: null, loading: false, error: null, needsReconnect: false }
 
 export function useSynergy(): Synergy {
   const [data, setData] = useState<Data>(nothing)
@@ -39,6 +58,8 @@ export function useSynergy(): Synergy {
   const [problem, setProblem] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [mail, setMail] = useState<Mail>(noMail)
+  const [googleBusy, setGoogleBusy] = useState(false)
 
   const editsRef = useRef<SavedEdits>(data.edits)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -56,10 +77,20 @@ export function useSynergy(): Synergy {
     }
   }, [])
 
+  const refreshMail = useCallback(async () => {
+    setMail(current => ({ ...current, loading: true, error: null }))
+    const result = await synergy().mail()
+    if (result.ok) setMail({ messages: result.messages, loading: false, error: null, needsReconnect: false })
+    else if (result.reconnect) setMail({ messages: null, loading: false, error: null, needsReconnect: true })
+    else setMail(current => ({ ...current, loading: false, error: failureText(result, "Your email couldn't be loaded.") }))
+  }, [])
+
   const reload = useCallback(async () => {
     // Anything typed a moment ago is saved first, so loading can't bring back the old version.
     await flush()
-    const [status, gradebook, dashboard, edits] = await Promise.all([synergy().status(), synergy().gradebook(), synergy().dashboard(), synergy().edits()])
+    const [status, gradebook, dashboard, edits, googleResult] = await Promise.all([synergy().status(), synergy().gradebook(), synergy().dashboard(), synergy().edits(), synergy().googleStatus()])
+    // Google being unavailable never stops the grades from showing.
+    const google = googleResult.ok ? { configured: googleResult.configured, connected: googleResult.connected, email: googleResult.email } : null
     const failed = [status, gradebook, dashboard, edits].find(r => !r.ok)
     if (failed && !failed.ok) {
       setProblem(failureText(failed, "Your saved grades couldn't be opened."))
@@ -70,10 +101,12 @@ export function useSynergy(): Synergy {
       // If something was typed while this loaded, that is newer than what was read.
       if (!dirty.current) editsRef.current = edits.edits
       setProblem(null)
-      setData({ status, gradebook, dashboard, edits: editsRef.current })
+      setData({ status, gradebook, dashboard, edits: editsRef.current, google })
+      if (google?.connected) void refreshMail()
+      else setMail(noMail)
     }
     setLoaded(true)
-  }, [flush])
+  }, [flush, refreshMail])
 
   useEffect(() => {
     void reload()
@@ -114,6 +147,48 @@ export function useSynergy(): Synergy {
     }
   }, [reload])
 
+  const signIn = useCallback(async () => {
+    setSyncing(true)
+    setNotice(null)
+    try {
+      const result = await synergy().signIn()
+      if (!result.ok) {
+        setNotice(failureText(result, "Couldn't sign in to Schoology."))
+        await reload()
+        return
+      }
+      await reload()
+      setNotice(`Signed in. Synced ${result.classes} ${result.classes === 1 ? 'class' : 'classes'} and ${result.assignments} ${result.assignments === 1 ? 'assignment' : 'assignments'}.`)
+    } finally {
+      setSyncing(false)
+    }
+  }, [reload])
+
+  const connectGoogle = useCallback(async () => {
+    setGoogleBusy(true)
+    setNotice(null)
+    try {
+      const result = await synergy().googleConnect()
+      if (!result.ok) {
+        setNotice(failureText(result, "Couldn't connect Google."))
+        return
+      }
+      await reload()
+      setNotice(`Google connected${result.email ? ` as ${result.email}` : ''}.`)
+    } finally {
+      setGoogleBusy(false)
+    }
+  }, [reload])
+
+  const disconnectGoogle = useCallback(async () => {
+    const result = await synergy().googleDisconnect()
+    if (!result.ok) setNotice(failureText(result, "Couldn't disconnect Google."))
+    else {
+      setNotice('Disconnected from Google. Your calendar and email are no longer shown here.')
+      await reload()
+    }
+  }, [reload])
+
   const signOut = useCallback(async () => {
     const result = await synergy().signOut()
     if (!result.ok) setNotice(failureText(result, "Couldn't sign out."))
@@ -146,6 +221,7 @@ export function useSynergy(): Synergy {
   return {
     loaded, data, problem, syncing, notice,
     dismiss: () => { setNotice(null); setProblem(null) },
-    sync, changeEdits, reload, signOut, exportTsv, openFolder, deleteData,
+    sync, signIn, changeEdits, reload, signOut, exportTsv, openFolder, deleteData,
+    mail, refreshMail, googleBusy, connectGoogle, disconnectGoogle,
   }
 }

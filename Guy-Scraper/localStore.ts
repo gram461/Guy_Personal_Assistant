@@ -4,7 +4,8 @@ import path from 'node:path'
 import { atomicWriteFile } from './atomicWrite'
 import { DataUnreadableError, StoreUnavailableError } from './errors'
 import { emptyEdits, parseEdits, sanitizeEdits, serializeEdits, type SavedEdits } from './savedEdits'
-import { decryptBytes, EDITS_CONTEXT, encryptBytes } from './secureFile'
+import type { GoogleLogin } from './google/types'
+import { decryptBytes, EDITS_CONTEXT, encryptBytes, GOOGLE_CONTEXT } from './secureFile'
 import type { SchoologySnapshot } from './snapshot'
 import { buildGradesTsv, TSV_COLUMNS } from './tsv'
 
@@ -26,6 +27,7 @@ export type StoreStatus = {
 const DATA_FILE = 'grades.tsv.enc'
 const KEY_FILE = 'grades.key'
 const EDITS_FILE = 'edits.enc'
+const GOOGLE_FILE = 'google.enc'
 
 const exists = (file: string) => access(file).then(() => true, () => false)
 
@@ -51,6 +53,10 @@ export class LocalGradesStore {
 
   private get editsFile() {
     return path.join(this.options.dir, EDITS_FILE)
+  }
+
+  private get googleFile() {
+    return path.join(this.options.dir, GOOGLE_FILE)
   }
 
   private async loadEdits(key: Buffer): Promise<SavedEdits> {
@@ -147,10 +153,38 @@ export class LocalGradesStore {
     })
   }
 
+  // The saved Google sign-in, encrypted like everything else here. Missing or unreadable means not connected.
+  readGoogle(): Promise<GoogleLogin | null> {
+    return this.serialize(async () => {
+      const { key } = await this.open()
+      try {
+        const data: unknown = JSON.parse(decryptBytes(await readFile(this.googleFile), key, GOOGLE_CONTEXT).toString('utf8'))
+        const login = data as Partial<GoogleLogin> | null
+        const valid = typeof login?.refreshToken === 'string' && login.refreshToken.length > 0 && login.refreshToken.length <= 2048 && typeof login.email === 'string' && login.email.length <= 320
+        return valid ? { refreshToken: login.refreshToken as string, email: login.email as string } : null
+      } catch {
+        return null
+      }
+    })
+  }
+
+  saveGoogle(login: GoogleLogin): Promise<void> {
+    return this.serialize(async () => {
+      const { key } = await this.open()
+      await atomicWriteFile(this.googleFile, encryptBytes(JSON.stringify({ refreshToken: login.refreshToken, email: login.email }), key, GOOGLE_CONTEXT))
+    })
+  }
+
+  clearGoogle(): Promise<void> {
+    return this.serialize(async () => {
+      await Promise.all([rm(this.googleFile, { force: true }), rm(`${this.googleFile}.tmp`, { force: true })])
+    })
+  }
+
   deleteAll(): Promise<void> {
     return this.serialize(async () => {
       await Promise.all(
-        [this.dataFile, this.keyFile, this.editsFile].flatMap(file => [rm(file, { force: true }), rm(`${file}.tmp`, { force: true })]),
+        [this.dataFile, this.keyFile, this.editsFile, this.googleFile].flatMap(file => [rm(file, { force: true }), rm(`${file}.tmp`, { force: true })]),
       )
     })
   }

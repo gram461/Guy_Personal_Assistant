@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { NotHere } from './NotHere'
-import { Icon, Notice, type IconName } from './parts'
+import { Email } from './Email'
+import { Personal } from './Personal'
+import { Icon, Notice, SignInBanner, type IconName } from './parts'
 import { School } from './School'
 import { Settings } from './Settings'
 import { Today } from './Today'
@@ -17,12 +18,14 @@ const TABS: { id: string; label: string; icon: IconName }[] = [
 export function App() {
   const app = useSynergy()
   const [tab, setTab] = useState('today')
+  const unreadCount = app.mail.messages?.filter(m => m.unread).length ?? 0
 
   return (
     <div className="app">
       <main className="screen" key={tab}>
         {app.problem && <Notice tone="problem" text={app.problem} onDismiss={app.dismiss} />}
         {app.notice && <Notice text={app.notice} onDismiss={app.dismiss} />}
+        {app.loaded && tab !== 'settings' && !app.data.status?.signedIn && <SignInBanner busy={app.syncing} onSignIn={() => void app.signIn()} />}
         {!app.loaded ? (
           <div className="loading">Opening your grades…</div>
         ) : tab === 'today' ? (
@@ -32,15 +35,18 @@ export function App() {
         ) : tab === 'settings' ? (
           <Settings app={app} />
         ) : tab === 'personal' ? (
-          <NotHere eyebrow="Your own plans" title="Personal" what="Your personal calendar and to-dos live in the web version of Synergy." />
+          <Personal app={app} />
         ) : (
-          <NotHere eyebrow="Your inbox" title="Email" what="Email lives in the web version of Synergy." />
+          <Email app={app} />
         )}
       </main>
       <nav aria-label="Main" className="tabs">
         {TABS.map(t => (
           <button key={t.id} type="button" aria-current={tab === t.id ? 'page' : undefined} onClick={() => setTab(t.id)}>
-            <Icon name={t.icon} />
+            <span className="tab-icon">
+              <Icon name={t.icon} />
+              {t.id === 'email' && unreadCount > 0 && <span className="badge" aria-label={`${unreadCount} unread`}>{unreadCount}</span>}
+            </span>
             {t.label}
           </button>
         ))}

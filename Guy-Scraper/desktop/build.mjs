@@ -1,5 +1,5 @@
 import { build } from 'esbuild'
-import { cp, rm } from 'node:fs/promises'
+import { access, cp, rm } from 'node:fs/promises'
 
 await rm('dist', { recursive: true, force: true })
 
@@ -30,6 +30,10 @@ await build({
   legalComments: 'none',
   logLevel: 'info',
 })
+
+// The Google client ID for this build, if there is one. Kept out of git; google-client.example.json shows the shape.
+if (await access('google-client.json').then(() => true, () => false)) await cp('google-client.json', 'dist/google-client.json')
+else console.log('No google-client.json: this build has Google sign-in switched off.')
 
 await cp('ui/styles.css', 'dist/styles.css')
 await cp('index.html', 'dist/index.html')

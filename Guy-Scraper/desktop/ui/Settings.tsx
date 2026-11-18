@@ -5,7 +5,7 @@ import type { Synergy } from './useSynergy'
 
 export function Settings({ app }: { app: Synergy }) {
   const [name, setName] = useDisplayName()
-  const { status } = app.data
+  const { status, google } = app.data
   const signedIn = status?.signedIn ?? false
   const initial = (name.trim()[0] ?? 'B').toUpperCase()
 
@@ -36,15 +36,24 @@ export function Settings({ app }: { app: Synergy }) {
         <div className="line">
           <div className="grow">
             <div className="strong">Google (Gmail and Calendar)</div>
-            <div className="sub">Not in the desktop app. Synergy here only connects to Schoology.</div>
+            <div className="sub">
+              {google?.connected
+                ? `Read-only${google.email ? ` · ${google.email}` : ''}`
+                : google?.configured
+                  ? 'Connect to see your calendar and email here. Read-only.'
+                  : "Not set up in this version of Synergy."}
+            </div>
           </div>
-          <span className="chip gray">Not available</span>
+          <span className={`chip ${google?.connected ? 'green' : 'gray'}`}>{google?.connected ? 'Connected' : google?.configured ? 'Not connected' : 'Not available'}</span>
         </div>
         <div className="buttons">
-          {signedIn ? (
-            <button type="button" className="secondary" onClick={() => void app.signOut()}>Sign out of Schoology</button>
-          ) : (
-            <button type="button" className="secondary" disabled={app.syncing} onClick={() => void app.sync()}>{app.syncing ? 'Syncing…' : 'Sign in to Schoology'}</button>
+          <button type="button" className={signedIn ? 'secondary' : 'primary'} disabled={app.syncing} onClick={() => void app.signIn()}>
+            {app.syncing ? 'Signing in…' : signedIn ? 'Sign in again or switch account' : 'Sign in to Schoology'}
+          </button>
+          {signedIn && <button type="button" className="secondary" onClick={() => void app.signOut()}>Sign out of Schoology</button>}
+          {google?.connected && <button type="button" className="secondary" onClick={() => void app.disconnectGoogle()}>Disconnect Google</button>}
+          {google?.configured && !google.connected && (
+            <button type="button" className="primary" disabled={app.googleBusy} onClick={() => void app.connectGoogle()}>{app.googleBusy ? 'Waiting for Google…' : 'Connect Google'}</button>
           )}
         </div>
       </section>

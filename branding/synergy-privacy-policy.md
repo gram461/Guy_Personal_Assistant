@@ -36,7 +36,7 @@ Synergy's use and transfer of information received from Google APIs to any other
 
 ## The desktop app
 
-The Synergy desktop app keeps your Schoology grades and the scores you enter in encrypted files on your own computer. We do not receive them. Your Schoology password is never saved.
+The Synergy desktop app keeps your Schoology grades and the scores you enter in encrypted files on your own computer. We do not receive them. Your Schoology password is never saved. If you connect Google in the desktop app, your Google sign-in is also kept encrypted on your computer, and your calendar and email details go straight from Google to your computer without passing through any server of ours.
 
 ## Keeping and deleting your data
 

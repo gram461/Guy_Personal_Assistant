@@ -84,7 +84,9 @@ export default function PrivacyPage() {
       <H2>The desktop app</H2>
       <p>
         The {APP_NAME} desktop app keeps your Schoology grades and the scores you enter in encrypted files on your own computer.
-        We do not receive them. Your Schoology password is never saved.
+        We do not receive them. Your Schoology password is never saved. If you connect Google in the desktop app, your Google sign-in is
+        also kept encrypted on your computer, and your calendar and email details go straight from Google to your computer without
+        passing through any server of ours.
       </p>
 
       <H2>Keeping and deleting your data</H2>

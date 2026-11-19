@@ -3,7 +3,8 @@ import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { AssignmentSnapshot, SchoologySnapshot } from '../snapshot'
-import { DEFAULT_GRADES_PATH, TSV_COLUMNS, formatTsv, snapshotToRows, writeGradesFile } from '../tsv'
+import { TSV_COLUMNS, formatTsv, snapshotToRows } from '../tsv'
+import { DEFAULT_GRADES_PATH, writeGradesFile } from '../tsvFile'
 
 const assignment = (overrides: Partial<AssignmentSnapshot>): AssignmentSnapshot => ({
   periodId: 'p1', sectionId: 's1', assignmentId: '1', categoryId: 'c1', title: 'Lab', description: '',

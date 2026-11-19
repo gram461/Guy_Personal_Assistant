@@ -5,7 +5,7 @@ import { ScraperLayoutError, SessionExpiredError } from './errors'
 import { parseAssignments, type ScrapedAssignment } from './parseAssignments'
 import { parseGrades, type GradeCourse, type GradeStatus } from './parseGrades'
 import { toSnapshot } from './toSnapshot'
-import { DEFAULT_GRADES_PATH, writeGradesFile } from './tsv'
+import { DEFAULT_GRADES_PATH, writeGradesFile } from './tsvFile'
 
 const ORIGIN = 'https://fuhsd.schoology.com'
 const SIGN_IN_TIMEOUT_MS = 5 * 60 * 1000

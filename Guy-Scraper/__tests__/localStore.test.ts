@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { DataUnreadableError, StoreUnavailableError } from '../errors'
 import { LocalGradesStore, type KeyProtector } from '../localStore'
 import type { SchoologySnapshot } from '../snapshot'
-import { DEFAULT_GRADES_PATH } from '../tsv'
+import { DEFAULT_GRADES_PATH } from '../tsvFile'
 
 const protectorWith = (mask: number, available = true): KeyProtector => ({
   isAvailable: () => available,

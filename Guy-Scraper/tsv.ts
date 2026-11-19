@@ -1,12 +1,8 @@
-import path from 'node:path'
-import { atomicWriteFile } from './atomicWrite'
 import { DataUnreadableError } from './errors'
 import type { SchoologySnapshot } from './snapshot'
 
 const PACIFIC_TZ = 'America/Los_Angeles'
 
-// Shipped with the program as a header-only file; the scraper fills it in on the user's own computer.
-export const DEFAULT_GRADES_PATH = path.join(__dirname, 'data', 'grades.tsv')
 
 export const TSV_COLUMNS = [
   'type',
@@ -164,14 +160,4 @@ export function buildGradesTsv(snapshot: SchoologySnapshot, scrapedAt = new Date
     classes: rows.filter(r => r.type === 'class').length,
     assignments: rows.filter(r => r.type === 'assignment').length,
   }
-}
-
-export async function writeGradesFile(
-  filePath: string,
-  snapshot: SchoologySnapshot,
-  scrapedAt = new Date(),
-): Promise<{ classes: number; assignments: number }> {
-  const { text: content, classes, assignments } = buildGradesTsv(snapshot, scrapedAt)
-  await atomicWriteFile(filePath, content)
-  return { classes, assignments }
 }

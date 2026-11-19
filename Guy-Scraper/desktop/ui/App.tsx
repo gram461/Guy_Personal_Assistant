@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { isWeb } from './bridge'
 import { Email } from './Email'
 import { Personal } from './Personal'
 import { Icon, Notice, SignInBanner, type IconName } from './parts'
@@ -21,11 +22,13 @@ export function App() {
   const unreadCount = app.mail.messages?.filter(m => m.unread).length ?? 0
 
   return (
-    <div className="app">
+    <div className="app synergy">
       <main className="screen" key={tab}>
         {app.problem && <Notice tone="problem" text={app.problem} onDismiss={app.dismiss} />}
         {app.notice && <Notice text={app.notice} onDismiss={app.dismiss} />}
-        {app.loaded && tab !== 'settings' && !app.data.status?.signedIn && <SignInBanner busy={app.syncing} onSignIn={() => void app.signIn()} />}
+        {app.loaded && tab !== 'settings' && !app.data.status?.signedIn && (
+          <SignInBanner busy={app.syncing} web={isWeb()} onSignIn={() => void app.signIn()} onText={text => void app.importGrades(text)} onTooBig={app.tooBig} />
+        )}
         {!app.loaded ? (
           <div className="loading">Opening your grades…</div>
         ) : tab === 'today' ? (

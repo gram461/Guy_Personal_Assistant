@@ -28,7 +28,9 @@ export default function PrivacyPage() {
           snippet, and whether the message is unread. {APP_NAME} does not read the full body of your email or your attachments.
         </li>
         <li>
-          <strong>Schoology, if you connect it:</strong> your class names, teachers, assignments, due dates, and grades.
+          <strong>Schoology grades, if you use them:</strong> your class names, teachers, assignments, due dates, and grades. The desktop app
+          reads them with your own Schoology login and keeps them on your computer. On the website you load a file exported from the desktop
+          app, and it stays in your browser: {APP_NAME}&apos;s server never receives it.
         </li>
         <li>
           <strong>Settings you create:</strong> the name you want to be called, notification choices, which assignments you marked

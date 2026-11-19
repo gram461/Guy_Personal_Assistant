@@ -4,6 +4,18 @@ import { APP_NAME, LEGAL_UPDATED } from '@/lib/legal'
 
 export function LegalPage({ title, children }: { title: string; children: ReactNode }) {
   return (
+    <div
+      style={{
+        background: '#f4f5f9',
+        minHeight: '100dvh',
+        // The pages' text uses the site's color names; this gives them the Synergy light palette.
+        ['--foreground' as string]: '#161a2e',
+        ['--muted-foreground' as string]: '#5b6178',
+        ['--primary' as string]: '#2536b8',
+        ['--border' as string]: '#e3e6ef',
+        color: '#161a2e',
+      }}
+    >
     <main className="mx-auto w-full max-w-2xl px-5 py-10 text-foreground">
       <Link href="/" className="text-sm font-semibold text-primary hover:underline">
         ← {APP_NAME}
@@ -16,6 +28,7 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
         <Link href="/terms" className="hover:underline">Terms of service</Link>
       </nav>
     </main>
+    </div>
   )
 }
 

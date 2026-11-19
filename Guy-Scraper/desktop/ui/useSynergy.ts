@@ -36,6 +36,9 @@ export type Synergy = {
   sync: () => Promise<void>
   // Opens the Schoology login window every time, to sign in again or switch accounts, then syncs.
   signIn: () => Promise<void>
+  // Website only: loads a grades file the person chose.
+  importGrades: (text: string) => Promise<void>
+  tooBig: () => void
   changeEdits: (change: (edits: SavedEdits) => SavedEdits) => void
   reload: () => Promise<void>
   signOut: () => Promise<void>
@@ -164,6 +167,25 @@ export function useSynergy(): Synergy {
     }
   }, [reload])
 
+  const importGrades = useCallback(
+    async (text: string) => {
+      setSyncing(true)
+      setNotice(null)
+      try {
+        const result = await synergy().importGrades?.(text)
+        if (!result || !result.ok) {
+          setNotice(result ? failureText(result, "That file couldn't be loaded.") : "Loading a grades file isn't available here.")
+          return
+        }
+        await reload()
+        setNotice(`Loaded ${result.classes} ${result.classes === 1 ? 'class' : 'classes'} and ${result.assignments} ${result.assignments === 1 ? 'assignment' : 'assignments'}.`)
+      } finally {
+        setSyncing(false)
+      }
+    },
+    [reload],
+  )
+
   const connectGoogle = useCallback(async () => {
     setGoogleBusy(true)
     setNotice(null)
@@ -221,7 +243,7 @@ export function useSynergy(): Synergy {
   return {
     loaded, data, problem, syncing, notice,
     dismiss: () => { setNotice(null); setProblem(null) },
-    sync, signIn, changeEdits, reload, signOut, exportTsv, openFolder, deleteData,
+    sync, signIn, importGrades, tooBig: () => setNotice('That file is too large to be a grades file.'), changeEdits, reload, signOut, exportTsv, openFolder, deleteData,
     mail, refreshMail, googleBusy, connectGoogle, disconnectGoogle,
   }
 }

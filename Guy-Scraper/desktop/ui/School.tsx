@@ -6,7 +6,8 @@ import {
   addAssignment, checkNewAssignment, classTitle, percentText, pointsText, removeAssignment, resetClass, setPointsText, setScoreText, teacherName, viewClass,
   type ClassView, type Row,
 } from './grades'
-import { Empty, Header, Icon, SyncButton } from './parts'
+import { isWeb } from './bridge'
+import { Empty, Header, Icon, ImportButton, SyncButton } from './parts'
 import type { Synergy } from './useSynergy'
 
 const barWidth = (percent: number | null) => `${percent === null ? 0 : Math.max(0, Math.min(100, percent)).toFixed(2)}%`
@@ -272,14 +273,23 @@ export function School({ app }: { app: Synergy }) {
       <Header
         eyebrow={terms.size === 1 ? `Term ${[...terms][0]} · ${syncedLabel(status?.lastSyncedAt ?? null, now)}` : syncedLabel(status?.lastSyncedAt ?? null, now)}
         title="School"
-        action={<SyncButton syncing={app.syncing} onSync={() => void app.sync()} />}
+        action={isWeb() ? undefined : <SyncButton syncing={app.syncing} onSync={() => void app.sync()} />}
       />
       {views.length === 0 ? (
         <Empty title="No classes yet">
-          <p>Sync with Schoology to see your classes and grades.</p>
-          <button type="button" className="primary" disabled={app.syncing} onClick={() => void app.sync()}>
-            {app.syncing ? 'Syncing…' : 'Sync now'}
-          </button>
+          {isWeb() ? (
+            <>
+              <p>Load the grades file you exported from the Synergy desktop app to see your classes and grades here.</p>
+              <ImportButton busy={app.syncing} onText={text => void app.importGrades(text)} onTooBig={app.tooBig}>{app.syncing ? 'Loading…' : 'Import grades file'}</ImportButton>
+            </>
+          ) : (
+            <>
+              <p>Sync with Schoology to see your classes and grades.</p>
+              <button type="button" className="primary" disabled={app.syncing} onClick={() => void app.sync()}>
+                {app.syncing ? 'Syncing…' : 'Sync now'}
+              </button>
+            </>
+          )}
         </Empty>
       ) : (
         <>

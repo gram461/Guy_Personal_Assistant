@@ -11,7 +11,7 @@ You choose what to connect. Synergy only reads the following, and never changes,
 - **Your Google account:** your name, email address, profile picture, and a Google account ID, to sign you in.
 - **Google Calendar (read-only):** the titles, times, and locations of events on your primary calendar for the next 14 days.
 - **Gmail (read-only):** for the 20 most recent inbox messages, the sender, subject, date, a short preview snippet, and whether the message is unread. Synergy does not read the full body of your email or your attachments.
-- **Schoology, if you connect it:** your class names, teachers, assignments, due dates, and grades.
+- **Schoology grades, if you use them:** your class names, teachers, assignments, due dates, and grades. The desktop app reads them with your own Schoology login and keeps them on your computer. On the website you load a file exported from the desktop app, and it stays in your browser: Synergy's server never receives it.
 - **Settings you create:** the name you want to be called, notification choices, which assignments you marked done, and a device token so your phone can receive notifications.
 
 ## How Synergy uses it

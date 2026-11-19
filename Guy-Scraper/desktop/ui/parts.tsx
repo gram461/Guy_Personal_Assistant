@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 
 const PATHS = {
   sync: 'M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4',
@@ -65,17 +65,53 @@ export function Notice({ text, onDismiss, tone = 'info' }: { text: string; onDis
   )
 }
 
-// Shown on every tab while no Schoology sign-in is saved, so signing in never needs hunting for.
-export function SignInBanner({ busy, onSignIn }: { busy: boolean; onSignIn: () => void }) {
+const MAX_IMPORT_BYTES = 5 * 1024 * 1024
+
+// A button that asks for a grades file and hands its text over. Nothing is uploaded anywhere; the file is read right here in the browser.
+export function ImportButton({ busy, onText, onTooBig, className = 'primary', children }: { busy: boolean; onText: (text: string) => void; onTooBig: () => void; className?: string; children: ReactNode }) {
+  const input = useRef<HTMLInputElement>(null)
+  return (
+    <>
+      <button type="button" className={className} disabled={busy} onClick={() => input.current?.click()}>
+        {children}
+      </button>
+      <input
+        ref={input}
+        type="file"
+        accept=".tsv,.txt,text/tab-separated-values,text/plain"
+        hidden
+        onChange={event => {
+          const file = event.target.files?.[0]
+          event.target.value = ''
+          if (!file) return
+          if (file.size > MAX_IMPORT_BYTES) onTooBig()
+          else void file.text().then(onText)
+        }}
+      />
+    </>
+  )
+}
+
+// Shown on every tab while there are no grades, so getting them in never needs hunting for.
+// On the desktop that means signing in to Schoology; on the website it means loading the exported file.
+export function SignInBanner({ busy, web, onSignIn, onText, onTooBig }: { busy: boolean; web: boolean; onSignIn: () => void; onText: (text: string) => void; onTooBig: () => void }) {
   return (
     <div className="signin-banner">
       <div className="grow">
-        <div className="strong">Not signed in to Schoology</div>
-        <div className="sub">Sign in to bring your classes and grades here. Your password is never saved.</div>
+        <div className="strong">{web ? 'No grades loaded' : 'Not signed in to Schoology'}</div>
+        <div className="sub">
+          {web
+            ? 'Load the grades file you exported from the Synergy desktop app. It stays in this browser and is never uploaded.'
+            : 'Sign in to bring your classes and grades here. Your password is never saved.'}
+        </div>
       </div>
-      <button type="button" className="primary" disabled={busy} onClick={onSignIn}>
-        {busy ? 'Signing in…' : 'Sign in to Schoology'}
-      </button>
+      {web ? (
+        <ImportButton busy={busy} onText={onText} onTooBig={onTooBig}>{busy ? 'Loading…' : 'Import grades file'}</ImportButton>
+      ) : (
+        <button type="button" className="primary" disabled={busy} onClick={onSignIn}>
+          {busy ? 'Signing in…' : 'Sign in to Schoology'}
+        </button>
+      )}
     </div>
   )
 }

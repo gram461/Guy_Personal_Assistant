@@ -1,7 +1,8 @@
 import type { DashboardAssignment } from '../../dashboard'
 import { dateKey, dayNumber, daysBetween, greeting, shortDate, syncedLabel, timeLabel, todayLong, weekdayShort } from './dates'
 import { classTitle } from './grades'
-import { Empty, Header, SyncButton } from './parts'
+import { isWeb } from './bridge'
+import { Empty, Header, ImportButton, SyncButton } from './parts'
 import { useDisplayName, useDoneAssignments } from './prefs'
 import type { Synergy } from './useSynergy'
 
@@ -57,14 +58,23 @@ export function Today({ app }: { app: Synergy }) {
 
   return (
     <>
-      <Header eyebrow={todayLong(now)} title={title} note={syncedLabel(status?.lastSyncedAt ?? null, now)} action={<SyncButton syncing={app.syncing} onSync={() => void app.sync()} />} />
+      <Header eyebrow={todayLong(now)} title={title} note={syncedLabel(status?.lastSyncedAt ?? null, now)} action={isWeb() ? undefined : <SyncButton syncing={app.syncing} onSync={() => void app.sync()} />} />
 
       {!hasData ? (
         <Empty title="No grades yet">
-          <p>Sign in to Schoology to bring your assignments and grades here. Your password is never saved, and everything is kept in an encrypted file on this computer.</p>
-          <button type="button" className="primary" disabled={app.syncing} onClick={() => void app.sync()}>
-            {app.syncing ? 'Syncing…' : 'Connect to Schoology'}
-          </button>
+          {isWeb() ? (
+            <>
+              <p>Load the grades file you exported from the Synergy desktop app (Settings, then Export as TSV). It stays in this browser and is never uploaded to Synergy.</p>
+              <ImportButton busy={app.syncing} onText={text => void app.importGrades(text)} onTooBig={app.tooBig}>{app.syncing ? 'Loading…' : 'Import grades file'}</ImportButton>
+            </>
+          ) : (
+            <>
+              <p>Sign in to Schoology to bring your assignments and grades here. Your password is never saved, and everything is kept in an encrypted file on this computer.</p>
+              <button type="button" className="primary" disabled={app.syncing} onClick={() => void app.sync()}>
+                {app.syncing ? 'Syncing…' : 'Connect to Schoology'}
+              </button>
+            </>
+          )}
         </Empty>
       ) : (
         <>

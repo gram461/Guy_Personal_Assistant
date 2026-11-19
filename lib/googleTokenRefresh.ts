@@ -50,7 +50,7 @@ async function loadGoogleRefreshToken(userId: string): Promise<string | null> {
   return decryptSecret(data.refresh_token_encrypted, encryptionContext(userId))
 }
 
-async function deleteGoogleRefreshToken(userId: string) {
+export async function deleteGoogleRefreshToken(userId: string) {
   await supabaseServer.from('google_tokens').delete().eq('user_id', userId)
   forgetGoogleAccessToken(userId)
 }

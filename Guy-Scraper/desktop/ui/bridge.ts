@@ -19,6 +19,10 @@ export type Status = {
 }
 
 export type Synergy = {
+  // Which program is showing these screens. The desktop app doesn't say, so no value means desktop.
+  platform?: 'desktop' | 'web'
+  // The website has no Schoology sign-in: people load the grades file exported from the desktop app instead.
+  importGrades?: (text: string) => Promise<{ ok: true; classes: number; assignments: number } | Failure>
   status: () => Promise<({ ok: true } & Status) | Failure>
   dashboard: () => Promise<({ ok: true } & Dashboard) | Failure>
   gradebook: () => Promise<({ ok: true } & Gradebook) | Failure>
@@ -45,6 +49,8 @@ declare global {
 }
 
 export const synergy = (): Synergy => window.synergy
+
+export const isWeb = () => typeof window !== 'undefined' && window.synergy?.platform === 'web'
 
 export function failureText(result: Failure, fallback: string): string {
   return result.message ?? fallback

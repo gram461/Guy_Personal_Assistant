@@ -14,7 +14,7 @@ const messaging = firebase.messaging()
 
 messaging.onBackgroundMessage((payload) => {
   const { title, body } = payload.notification || {}
-  self.registration.showNotification(title || 'Guy\'s Personal Assistant', {
+  self.registration.showNotification(title || 'Synergy', {
     body: body || '',
     icon: '/icon-192.png',
   })

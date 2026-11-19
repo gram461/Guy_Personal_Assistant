@@ -1,3 +1,4 @@
+import { isWeb } from './bridge'
 import { Empty, Header } from './parts'
 import type { Synergy } from './useSynergy'
 
@@ -17,7 +18,9 @@ export function GoogleConnect({ app, eyebrow, title, what, again }: { app: Syner
             {again
               ? 'Google no longer accepts the saved sign-in, so nothing can be shown until you sign in again.'
               : `Synergy can show ${what} here. It only reads, and never changes, sends, or deletes anything.`}{' '}
-            You sign in on Google's own page in your normal browser, and the sign-in is kept encrypted on this computer.
+            {isWeb()
+              ? "You sign in on Google's own page. Synergy keeps the sign-in encrypted on its server so it can read for you while you're signed in."
+              : "You sign in on Google's own page in your normal browser, and the sign-in is kept encrypted on this computer."}
           </p>
           <button type="button" className="primary" disabled={app.googleBusy} onClick={() => void app.connectGoogle()}>
             {app.googleBusy ? 'Waiting for Google…' : again ? 'Sign in with Google' : 'Connect Google'}

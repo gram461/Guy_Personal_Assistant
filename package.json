@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "scraper:live-test": "tsx Guy-Scraper/liveTest.ts",
-    "scraper:live-tsv": "tsx Guy-Scraper/liveTest.ts --tsv"
+    "scraper:live-tsv": "tsx Guy-Scraper/liveTest.ts --tsv",
+    "prebuild": "node scripts/build-grabber.mjs",
+    "build:grabber": "node scripts/build-grabber.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
@@ -30,6 +32,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "^15.5.20",
     "playwright": "^1.64.1",

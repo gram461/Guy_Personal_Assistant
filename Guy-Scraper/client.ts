@@ -1,6 +1,7 @@
 import { ScraperLayoutError, SessionExpiredError } from './errors'
+import { SCHOOLOGY_ORIGIN } from './schoologyOrigin'
 
-const ORIGIN = 'https://fuhsd.schoology.com'
+const ORIGIN = SCHOOLOGY_ORIGIN
 const TIMEOUT_MS = 15_000
 const DELAY_BETWEEN_REQUESTS_MS = 1_000
 

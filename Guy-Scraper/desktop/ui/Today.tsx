@@ -2,7 +2,7 @@ import type { DashboardAssignment } from '../../dashboard'
 import { dateKey, dayNumber, daysBetween, greeting, shortDate, syncedLabel, timeLabel, todayLong, weekdayShort } from './dates'
 import { classTitle } from './grades'
 import { isWeb } from './bridge'
-import { Empty, Header, ImportButton, SyncButton } from './parts'
+import { Empty, Header, SchoologyHelp, SyncButton } from './parts'
 import { useDisplayName, useDoneAssignments } from './prefs'
 import type { Synergy } from './useSynergy'
 
@@ -64,8 +64,8 @@ export function Today({ app }: { app: Synergy }) {
         <Empty title="No grades yet">
           {isWeb() ? (
             <>
-              <p>Load the grades file you exported from the Synergy desktop app (Settings, then Export as TSV). It stays in this browser and is never uploaded to Synergy.</p>
-              <ImportButton busy={app.syncing} onText={text => void app.importGrades(text)} onTooBig={app.tooBig}>{app.syncing ? 'Loading…' : 'Import grades file'}</ImportButton>
+              <p>Get your grades from Schoology. They stay in this browser and are never uploaded to Synergy.</p>
+              <SchoologyHelp busy={app.syncing} onText={text => void app.importGrades(text)} onTooBig={app.tooBig} />
             </>
           ) : (
             <>

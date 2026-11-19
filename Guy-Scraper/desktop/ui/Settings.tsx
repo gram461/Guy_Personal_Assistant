@@ -1,6 +1,6 @@
 import { syncedLabel } from './dates'
 import { isWeb } from './bridge'
-import { Header, ImportButton } from './parts'
+import { Header, ImportButton, SchoologyHelp } from './parts'
 import { useDisplayName } from './prefs'
 import type { Synergy } from './useSynergy'
 
@@ -74,6 +74,13 @@ export function Settings({ app }: { app: Synergy }) {
           )}
         </div>
       </section>
+
+      {web && (
+        <section className="card stack" aria-labelledby="get-h">
+          <h2 id="get-h">Get your grades from Schoology</h2>
+          <SchoologyHelp busy={app.syncing} onText={text => void app.importGrades(text)} onTooBig={app.tooBig} />
+        </section>
+      )}
 
       <section className="card stack" aria-labelledby="data-h">
         <h2 id="data-h">{web ? 'Your data stays in this browser' : 'Your data stays on this computer'}</h2>

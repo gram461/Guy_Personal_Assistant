@@ -115,6 +115,18 @@ export function useSynergy(): Synergy {
     void reload()
   }, [reload])
 
+  // The website can be handed grades by the person's own Schoology tab at any moment; the screens refresh when that happens.
+  useEffect(() => {
+    const onChanged = (event: Event) => {
+      const message = (event as CustomEvent<{ message?: string }>).detail?.message
+      void reload().then(() => {
+        if (message) setNotice(message)
+      })
+    }
+    window.addEventListener('synergy:grades-changed', onChanged)
+    return () => window.removeEventListener('synergy:grades-changed', onChanged)
+  }, [reload])
+
   useEffect(() => {
     const onHide = () => void flush()
     window.addEventListener('pagehide', onHide)

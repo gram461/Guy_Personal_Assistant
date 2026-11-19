@@ -22,6 +22,8 @@ export type Synergy = {
   // Which program is showing these screens. The desktop app doesn't say, so no value means desktop.
   platform?: 'desktop' | 'web'
   // The website has no Schoology sign-in: people load the grades file exported from the desktop app instead.
+  // Website only: the "Get my grades" bookmark people drag to their bookmarks bar.
+  grabberLink?: () => string
   importGrades?: (text: string) => Promise<{ ok: true; classes: number; assignments: number } | Failure>
   status: () => Promise<({ ok: true } & Status) | Failure>
   dashboard: () => Promise<({ ok: true } & Dashboard) | Failure>

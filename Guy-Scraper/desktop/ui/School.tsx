@@ -7,7 +7,7 @@ import {
   type ClassView, type Row,
 } from './grades'
 import { isWeb } from './bridge'
-import { Empty, Header, Icon, ImportButton, SyncButton } from './parts'
+import { Empty, Header, Icon, SchoologyHelp, SyncButton } from './parts'
 import type { Synergy } from './useSynergy'
 
 const barWidth = (percent: number | null) => `${percent === null ? 0 : Math.max(0, Math.min(100, percent)).toFixed(2)}%`
@@ -279,8 +279,8 @@ export function School({ app }: { app: Synergy }) {
         <Empty title="No classes yet">
           {isWeb() ? (
             <>
-              <p>Load the grades file you exported from the Synergy desktop app to see your classes and grades here.</p>
-              <ImportButton busy={app.syncing} onText={text => void app.importGrades(text)} onTooBig={app.tooBig}>{app.syncing ? 'Loading…' : 'Import grades file'}</ImportButton>
+              <p>Get your grades from Schoology to see your classes and grades here.</p>
+              <SchoologyHelp busy={app.syncing} onText={text => void app.importGrades(text)} onTooBig={app.tooBig} />
             </>
           ) : (
             <>

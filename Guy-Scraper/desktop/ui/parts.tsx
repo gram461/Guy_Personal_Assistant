@@ -1,4 +1,5 @@
 import { useRef, type ReactNode } from 'react'
+import { synergy } from './bridge'
 
 const PATHS = {
   sync: 'M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4',
@@ -89,6 +90,42 @@ export function ImportButton({ busy, onText, onTooBig, className = 'primary', ch
         }}
       />
     </>
+  )
+}
+
+// The website's way to get grades without the desktop app: a bookmark that reads Schoology from the person's own signed-in tab.
+export function SchoologyHelp({ busy, onText, onTooBig }: { busy: boolean; onText: (text: string) => void; onTooBig: () => void }) {
+  const href = synergy().grabberLink?.() ?? ''
+  return (
+    <div className="help">
+      <ol className="help-steps">
+        <li>
+          Drag this button to your bookmarks bar:{' '}
+          <a
+            className="bookmark-link"
+            ref={element => {
+              // React won't put a javascript: address in an href, so it is set directly.
+              element?.setAttribute('href', href)
+            }}
+            onClick={event => {
+              event.preventDefault()
+              window.alert('Drag this button up to your bookmarks bar instead of clicking it. Then click it from your Schoology page.')
+            }}
+          >
+            Get my Schoology grades
+          </a>
+        </li>
+        <li>Open Schoology in another tab and sign in.</li>
+        <li>
+          Click the bookmark there, then press <strong>Send to Synergy</strong>.
+        </li>
+      </ol>
+      <div className="hint flush">Your grades go straight from your browser to this page. Nothing is uploaded to a server.</div>
+      <div className="help-or">Or import the file you exported from the Synergy desktop app:</div>
+      <ImportButton busy={busy} className="secondary" onText={onText} onTooBig={onTooBig}>
+        {busy ? 'Loading…' : 'Import grades file'}
+      </ImportButton>
+    </div>
   )
 }
 

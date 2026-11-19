@@ -4,6 +4,8 @@ import { buildGradebook } from '@/Guy-Scraper/gradebook'
 import { emptyEdits, sanitizeEdits, serializeEdits } from '@/Guy-Scraper/savedEdits'
 import { formatTsv, parseTsv } from '@/Guy-Scraper/tsv'
 import type { Failure, Synergy } from '@/Guy-Scraper/desktop/ui/bridge'
+import { grabberLink } from './grabberLink'
+import { TRUSTED_ORIGIN } from './receiveGrades'
 
 // Stands in for the desktop app's program on the website. Grades are never sent to Synergy's server:
 // the person loads the file exported from the desktop app, and it is kept in this browser only.
@@ -77,6 +79,8 @@ const ALLOWED_LINKS = ['https://calendar.google.com/', 'https://mail.google.com/
 
 export const webBridge: Synergy = {
   platform: 'web',
+
+  grabberLink: () => grabberLink(window.location.origin, TRUSTED_ORIGIN),
 
   status: () => {
     const rows = (() => {

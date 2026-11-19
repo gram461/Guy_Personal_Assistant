@@ -39,8 +39,8 @@ describe('LocalGradesStore', () => {
   it('starts from the shipped header-only file, stored encrypted', async () => {
     const { dir, store } = await setup()
     expect(await store.readTsv()).toBe(await readFile(DEFAULT_GRADES_PATH, 'utf8'))
-    expect(await files(dir)).toEqual(['grades.key', 'grades.tsv.enc'])
-    expect((await readFile(path.join(dir, 'grades.tsv.enc'))).toString('latin1')).not.toContain('class_grade_letter')
+    expect(await files(dir)).toEqual(['grade.file.secret', 'grades.key'])
+    expect((await readFile(path.join(dir, 'grade.file.secret'))).toString('latin1')).not.toContain('class_grade_letter')
     expect(await store.status()).toMatchObject({ classes: 0, assignments: 0, lastSyncedAt: null })
   })
 
@@ -49,9 +49,9 @@ describe('LocalGradesStore', () => {
     const at = new Date('2026-11-04T12:00:00Z')
 
     expect(await store.save(snapshot, at)).toEqual({ classes: 2, assignments: 1 })
-    expect(await store.status()).toEqual({ dataFolder: dir, fileName: 'grades.tsv.enc', classes: 2, assignments: 1, lastSyncedAt: at.toISOString() })
+    expect(await store.status()).toEqual({ dataFolder: dir, fileName: 'grade.file.secret', classes: 2, assignments: 1, lastSyncedAt: at.toISOString() })
 
-    const onDisk = (await readFile(path.join(dir, 'grades.tsv.enc'))).toString('latin1')
+    const onDisk = (await readFile(path.join(dir, 'grade.file.secret'))).toString('latin1')
     for (const word of ['Biology', 'Cell Lab', 'SmithJ']) expect(onDisk).not.toContain(word)
     expect((await store.readTsv()).split('\n').filter(l => l.startsWith('assignment\t'))[0]).toContain('Cell Lab')
   })
@@ -61,7 +61,7 @@ describe('LocalGradesStore', () => {
     await store.save(snapshot)
     await store.save({ ...snapshot, assignments: [] })
     expect(await store.status()).toMatchObject({ classes: 2, assignments: 0 })
-    expect(await files(dir)).toEqual(['grades.key', 'grades.tsv.enc'])
+    expect(await files(dir)).toEqual(['grade.file.secret', 'grades.key'])
   })
 
   it('exports a readable copy for the user and keeps the stored file encrypted', async () => {
@@ -72,7 +72,7 @@ describe('LocalGradesStore', () => {
     await store.exportTo(copy)
     expect(await readFile(copy, 'utf8')).toBe(await store.readTsv())
     expect((await stat(copy)).mode & 0o077).toBe(0)
-    expect((await readFile(path.join(dir, 'grades.tsv.enc'))).toString('latin1')).not.toContain('Biology')
+    expect((await readFile(path.join(dir, 'grade.file.secret'))).toString('latin1')).not.toContain('Biology')
   })
 
   it('deletes everything, then starts fresh with a new key', async () => {
@@ -89,7 +89,7 @@ describe('LocalGradesStore', () => {
   it('keeps files private to the user', async () => {
     const { dir, store } = await setup()
     await store.save(snapshot)
-    for (const file of ['grades.key', 'grades.tsv.enc']) expect((await stat(path.join(dir, file))).mode & 0o077).toBe(0)
+    for (const file of ['grade.file.secret', 'grades.key']) expect((await stat(path.join(dir, file))).mode & 0o077).toBe(0)
   })
 
   it('refuses to store anything when secure storage is unavailable', async () => {
@@ -102,12 +102,12 @@ describe('LocalGradesStore', () => {
   it('reports an unreadable key instead of replacing it, and leaves the data alone', async () => {
     const { dir, store } = await setup()
     await store.save(snapshot)
-    const before = await readFile(path.join(dir, 'grades.tsv.enc'))
+    const before = await readFile(path.join(dir, 'grade.file.secret'))
 
     const otherAccount = new LocalGradesStore({ dir, templatePath: DEFAULT_GRADES_PATH, protector: protectorWith(0x33) })
     await expect(otherAccount.status()).rejects.toThrow(DataUnreadableError)
     await expect(otherAccount.save(snapshot)).rejects.toThrow(DataUnreadableError)
-    expect((await readFile(path.join(dir, 'grades.tsv.enc'))).equals(before)).toBe(true)
+    expect((await readFile(path.join(dir, 'grade.file.secret'))).equals(before)).toBe(true)
   })
 
   it('reports a missing key instead of creating a new one next to existing data', async () => {
@@ -115,17 +115,17 @@ describe('LocalGradesStore', () => {
     await store.save(snapshot)
     await writeFile(path.join(dir, 'grades.key'), '')
     await store.deleteAll()
-    await writeFile(path.join(dir, 'grades.tsv.enc'), 'leftover')
+    await writeFile(path.join(dir, 'grade.file.secret'), 'leftover')
 
     await expect(store.save(snapshot)).rejects.toThrow('key is missing')
-    expect(await readFile(path.join(dir, 'grades.tsv.enc'), 'utf8')).toBe('leftover')
-    expect(await files(dir)).toEqual(['grades.tsv.enc'])
+    expect(await readFile(path.join(dir, 'grade.file.secret'), 'utf8')).toBe('leftover')
+    expect(await files(dir)).toEqual(['grade.file.secret'])
   })
 
   it('reports a grades file that was changed', async () => {
     const { dir, store } = await setup()
     await store.save(snapshot)
-    const file = path.join(dir, 'grades.tsv.enc')
+    const file = path.join(dir, 'grade.file.secret')
     const bytes = await readFile(file)
     bytes[bytes.length - 1] ^= 1
     await writeFile(file, bytes)
@@ -165,7 +165,7 @@ describe('LocalGradesStore', () => {
       await store.saveEdits({ ...edits, added: { 'T1|Biology|SmithJ': [{ id: 1, title: 'Secret plan', category: 'Tests', points: 50 }] } })
       const onDisk = (await readFile(path.join(dir, 'edits.enc'))).toString('latin1')
       for (const word of ['Secret plan', 'Biology', 'Tests', '42']) expect(onDisk).not.toContain(word)
-      expect(await files(dir)).toEqual(['edits.enc', 'grades.key', 'grades.tsv.enc'])
+      expect(await files(dir)).toEqual(['edits.enc', 'grade.file.secret', 'grades.key'])
       expect((await stat(path.join(dir, 'edits.enc'))).mode & 0o077).toBe(0)
     })
 
@@ -207,7 +207,7 @@ describe('LocalGradesStore', () => {
     it('does not accept the grades file in place of the edits file', async () => {
       const { dir, store } = await setup()
       await store.save(snapshot)
-      await writeFile(path.join(dir, 'edits.enc'), await readFile(path.join(dir, 'grades.tsv.enc')))
+      await writeFile(path.join(dir, 'edits.enc'), await readFile(path.join(dir, 'grade.file.secret')))
       expect(await store.readEdits()).toEqual(none)
     })
 
@@ -263,7 +263,7 @@ describe('LocalGradesStore', () => {
       expect(await store.readGoogle()).toEqual(login)
       await store.clearGoogle()
       expect(await store.readGoogle()).toBeNull()
-      expect(await files(dir)).toEqual(['grades.key', 'grades.tsv.enc'])
+      expect(await files(dir)).toEqual(['grade.file.secret', 'grades.key'])
     })
 
     it('is deleted with everything else', async () => {
@@ -283,15 +283,33 @@ describe('LocalGradesStore', () => {
       expect(await store.readGoogle()).toBeNull()
 
       await store.save(snapshot)
-      await writeFile(file, await readFile(path.join(dir, 'grades.tsv.enc')))
+      await writeFile(file, await readFile(path.join(dir, 'grade.file.secret')))
       expect(await store.readGoogle()).toBeNull()
     })
+  })
+
+  it('renames a grades file saved under the old name instead of starting over', async () => {
+    const { dir, store } = await setup()
+    await store.save(snapshot)
+    const { rename } = await import('node:fs/promises')
+    await rename(path.join(dir, 'grade.file.secret'), path.join(dir, 'grades.tsv.enc'))
+
+    expect(await store.status()).toMatchObject({ classes: 2, assignments: 1, fileName: 'grade.file.secret' })
+    expect(await files(dir)).toEqual(['grade.file.secret', 'grades.key'])
+  })
+
+  it('deletes a leftover old-name file too', async () => {
+    const { dir, store } = await setup()
+    await store.save(snapshot)
+    await writeFile(path.join(dir, 'grades.tsv.enc'), 'old')
+    await store.deleteAll()
+    expect(await files(dir)).toEqual([])
   })
 
   it('creates one key even when two operations start at the same time', async () => {
     const { dir, store } = await setup()
     await Promise.all([store.status(), store.save(snapshot), store.status()])
-    expect(await files(dir)).toEqual(['grades.key', 'grades.tsv.enc'])
+    expect(await files(dir)).toEqual(['grade.file.secret', 'grades.key'])
     expect(await store.status()).toMatchObject({ classes: 2, assignments: 1 })
   })
 })

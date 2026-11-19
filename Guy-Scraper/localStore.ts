@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { access, readFile, rm } from 'node:fs/promises'
+import { access, readFile, rename, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { atomicWriteFile } from './atomicWrite'
 import { DataUnreadableError, StoreUnavailableError } from './errors'
@@ -24,7 +24,9 @@ export type StoreStatus = {
   lastSyncedAt: string | null
 }
 
-const DATA_FILE = 'grades.tsv.enc'
+const DATA_FILE = 'grade.file.secret'
+// What the grades file was called before; an existing one is renamed to the current name.
+const LEGACY_DATA_FILE = 'grades.tsv.enc'
 const KEY_FILE = 'grades.key'
 const EDITS_FILE = 'edits.enc'
 const GOOGLE_FILE = 'google.enc'
@@ -45,6 +47,10 @@ export class LocalGradesStore {
 
   private get dataFile() {
     return path.join(this.options.dir, DATA_FILE)
+  }
+
+  private get legacyDataFile() {
+    return path.join(this.options.dir, LEGACY_DATA_FILE)
   }
 
   private get keyFile() {
@@ -73,6 +79,9 @@ export class LocalGradesStore {
   private async open(): Promise<{ key: Buffer; text: string }> {
     const { protector, templatePath } = this.options
     if (!protector.isAvailable()) throw new StoreUnavailableError()
+
+    // A grades file saved under the old name keeps working: it is renamed, never copied, so there is only ever one.
+    if (!(await exists(this.dataFile)) && (await exists(this.legacyDataFile))) await rename(this.legacyDataFile, this.dataFile)
 
     const [hasKey, hasData] = await Promise.all([exists(this.keyFile), exists(this.dataFile)])
 
@@ -184,7 +193,7 @@ export class LocalGradesStore {
   deleteAll(): Promise<void> {
     return this.serialize(async () => {
       await Promise.all(
-        [this.dataFile, this.keyFile, this.editsFile, this.googleFile].flatMap(file => [rm(file, { force: true }), rm(`${file}.tmp`, { force: true })]),
+        [this.dataFile, this.legacyDataFile, this.keyFile, this.editsFile, this.googleFile].flatMap(file => [rm(file, { force: true }), rm(`${file}.tmp`, { force: true })]),
       )
     })
   }

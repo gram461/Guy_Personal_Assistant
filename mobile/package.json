@@ -16,6 +16,10 @@
     "sync": "cap sync",
     "open:ios": "cap open ios",
     "open:android": "cap open android",
-    "doctor": "cap doctor"
+    "doctor": "cap doctor",
+    "assets": "capacitor-assets generate --iconBackgroundColor '#4B3FC4' --splashBackgroundColor '#4B3FC4'"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "4.0.0"
   }
 }

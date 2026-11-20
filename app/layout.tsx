@@ -28,6 +28,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#f4f5f9",
   colorScheme: "light",
+  // Lets the app use the whole screen on a phone; the screens keep their content clear of the notch and home bar.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

@@ -19,8 +19,10 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: "/icon-192.png",
-    apple: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
   },
+  // When someone adds the site to their iPhone's home screen it opens like an app.
+  appleWebApp: { capable: true, title: "Synergy", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

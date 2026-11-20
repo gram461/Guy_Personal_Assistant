@@ -50,3 +50,19 @@ Guy-Scraper/desktop/dist/
 Guy-Scraper/desktop/release/
 # The Google client ID for a build (copy google-client.example.json to google-client.json)
 Guy-Scraper/desktop/google-client.json
+
+# Phone app (mobile/): installed tools, generated native builds, and signing keys. Signing keys must never be committed.
+mobile/node_modules/
+mobile/ios/App/Pods/
+mobile/ios/App/build/
+mobile/ios/DerivedData/
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/local.properties
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+*.ipa
+*.aab

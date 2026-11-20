@@ -1,5 +1,5 @@
 import { syncedLabel } from './dates'
-import { isWeb } from './bridge'
+import { isApp, isWeb } from './bridge'
 import { Header, ImportButton, SchoologyHelp } from './parts'
 import { useDisplayName } from './prefs'
 import type { Synergy } from './useSynergy'
@@ -9,6 +9,7 @@ export function Settings({ app }: { app: Synergy }) {
   const { status, google } = app.data
   const signedIn = status?.signedIn ?? false
   const web = isWeb()
+  const phone = isApp()
   const initial = (name.trim()[0] ?? 'B').toUpperCase()
 
   return (
@@ -83,22 +84,24 @@ export function Settings({ app }: { app: Synergy }) {
       )}
 
       <section className="card stack" aria-labelledby="data-h">
-        <h2 id="data-h">{web ? 'Your data stays in this browser' : 'Your data stays on this computer'}</h2>
+        <h2 id="data-h">{web ? 'Your data stays in this browser' : phone ? 'Your data stays on this phone' : 'Your data stays on this computer'}</h2>
         <p className="body">
           {web
             ? 'Your grades and the scores you enter are kept in this browser only. They are never uploaded to Synergy, and clearing your browser data removes them.'
-            : 'Your grades and the scores you enter are saved in encrypted files here. Nobody else, including the people who made Synergy, can open them.'}
+            : phone
+              ? 'Your grades and the scores you enter are kept in this app on your phone. They are never uploaded to Synergy, and deleting the app removes them.'
+              : 'Your grades and the scores you enter are saved in encrypted files here. Nobody else, including the people who made Synergy, can open them.'}
         </p>
         <div className="buttons">
-          <button type="button" className="primary" onClick={() => void app.exportTsv()}>{web ? 'Download as TSV' : 'Export as TSV'}</button>
-          {!web && <button type="button" className="secondary" onClick={() => void app.openFolder()}>Show data folder</button>}
+          {!phone && <button type="button" className="primary" onClick={() => void app.exportTsv()}>{web ? 'Download as TSV' : 'Export as TSV'}</button>}
+          {!web && !phone && <button type="button" className="secondary" onClick={() => void app.openFolder()}>Show data folder</button>}
         </div>
         <div className="hint flush">An exported file is a plain copy that anyone who can open it can read.</div>
       </section>
 
       <section className="card stack danger" aria-labelledby="danger-h">
         <h2 id="danger-h">Delete my data</h2>
-        <p className="body">{web ? 'This permanently erases the grades you imported and the scores you entered from this browser, and your Synergy account and saved Google sign-in if you signed in. It cannot be undone, and you will be asked to confirm.' : 'This permanently erases your saved grades, the scores you entered, and your Schoology sign-in from this computer. It cannot be undone, and you will be asked to confirm.'}</p>
+        <p className="body">{web ? 'This permanently erases the grades you imported and the scores you entered from this browser, and your Synergy account and saved Google sign-in if you signed in. It cannot be undone, and you will be asked to confirm.' : `This permanently erases your saved grades, the scores you entered, and your Schoology sign-in from this ${phone ? 'phone' : 'computer'}. It cannot be undone, and you will be asked to confirm.`}</p>
         <button type="button" className="danger-button" onClick={() => void app.deleteData()}>Delete my data…</button>
       </section>
     </>

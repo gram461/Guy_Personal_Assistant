@@ -1,4 +1,4 @@
-import { isWeb } from './bridge'
+import { isApp, isWeb } from './bridge'
 import { Empty, Header } from './parts'
 import type { Synergy } from './useSynergy'
 
@@ -10,7 +10,11 @@ export function GoogleConnect({ app, eyebrow, title, what, again }: { app: Syner
       <Header eyebrow={eyebrow} title={title} />
       {!configured ? (
         <Empty title="Google isn't set up yet">
-          <p>This version of Synergy was made without a Google client ID, so it can't connect to Google. Your Schoology grades work as usual.</p>
+          <p>
+            {isApp()
+              ? "Calendar and email aren't in the phone app yet, because Google doesn't allow signing in inside an app's own window. They're on the Synergy website. Your Schoology grades work as usual."
+              : "This version of Synergy was made without a Google client ID, so it can't connect to Google. Your Schoology grades work as usual."}
+          </p>
         </Empty>
       ) : (
         <Empty title={again ? 'Sign in with Google again' : `Connect ${what}`}>

@@ -1,0 +1,9 @@
+{
+  "appId": "com.synergy.app",
+  "appName": "Synergy",
+  "webDir": "www",
+  "server": {
+    "url": "https://guy-personal-assistant.vercel.app/app",
+    "cleartext": false
+  }
+}

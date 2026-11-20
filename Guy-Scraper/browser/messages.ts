@@ -2,7 +2,19 @@
 
 export const GRADES_MESSAGE = 'synergy-grades'
 export const RECEIVED_MESSAGE = 'synergy-received'
+export const ERROR_MESSAGE = 'synergy-error'
 export const MAX_TSV_CHARS = 5 * 1024 * 1024
+
+// Why the phone app's helper couldn't read the grades.
+export type ErrorReason = 'signed-out' | 'layout' | 'network' | 'no-classes' | 'wrong-site'
+const REASONS: readonly string[] = ['signed-out', 'layout', 'network', 'no-classes', 'wrong-site']
+
+export function readErrorMessage(data: unknown): ErrorReason | null {
+  if (typeof data !== 'object' || data === null) return null
+  const m = data as { type?: unknown; version?: unknown; reason?: unknown }
+  if (m.type !== ERROR_MESSAGE || m.version !== 1 || typeof m.reason !== 'string') return null
+  return REASONS.includes(m.reason) ? (m.reason as ErrorReason) : null
+}
 
 export type GradesMessage = { type: typeof GRADES_MESSAGE; version: 1; tsv: string }
 export type ReceivedMessage = { type: typeof RECEIVED_MESSAGE; ok: boolean; classes?: number; assignments?: number; message?: string }

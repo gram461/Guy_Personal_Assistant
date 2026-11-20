@@ -52,6 +52,18 @@ declare global {
 
 export const synergy = (): Synergy => window.synergy
 
+// True when the website was added to the home screen and opened from there: it runs in its own window, without the browser around it.
+// (Safari reports this with navigator.standalone; other browsers with the display-mode setting.)
+export const isInstalledApp = () => {
+  if (typeof window === 'undefined') return false
+  const modes = ['standalone', 'fullscreen', 'minimal-ui']
+  return modes.some(mode => window.matchMedia?.(`(display-mode: ${mode})`).matches) || (navigator as Navigator & { standalone?: boolean }).standalone === true
+}
+
+// iPhones and iPads keep an installed web app's saved data apart from Safari's.
+export const isIosDevice = () =>
+  typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+
 export const isWeb = () => typeof window !== 'undefined' && window.synergy?.platform === 'web'
 // The phone app: it signs in to Schoology like the desktop app does, but keeps its data on the phone.
 export const isApp = () => typeof window !== 'undefined' && window.synergy?.platform === 'app'

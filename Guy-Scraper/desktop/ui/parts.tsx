@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from 'react'
-import { synergy } from './bridge'
+import { isInstalledApp, isIosDevice, synergy } from './bridge'
 
 const PATHS = {
   sync: 'M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4',
@@ -96,6 +96,23 @@ export function ImportButton({ busy, onText, onTooBig, className = 'primary', ch
 // The website's way to get grades without the desktop app: a bookmark that reads Schoology from the person's own signed-in tab.
 export function SchoologyHelp({ busy, onText, onTooBig }: { busy: boolean; onText: (text: string) => void; onTooBig: () => void }) {
   const href = synergy().grabberLink?.() ?? ''
+
+  // An installed app has no bookmarks bar and no browser tabs, so the bookmark can't be used from inside it.
+  if (isInstalledApp()) {
+    return (
+      <div className="help">
+        <p className="help-note">
+          Reading your grades straight from Schoology needs a browser tab, which an installed app doesn't have. Import the grades file exported from the Synergy
+          desktop app instead.
+          {isIosDevice() && " (On iPhone, this installed app keeps its own saved data, separate from Safari, so grades loaded in Safari won't appear here.)"}
+        </p>
+        <ImportButton busy={busy} className="primary" onText={onText} onTooBig={onTooBig}>
+          {busy ? 'Loading…' : 'Import grades file'}
+        </ImportButton>
+      </div>
+    )
+  }
+
   return (
     <div className="help">
       <ol className="help-steps">

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import StandaloneRedirect from '@/components/StandaloneRedirect'
 import { APP_NAME } from '@/lib/legal'
 
 // The public home page: what Synergy is, what it reads and why, and where to find the policies.
@@ -6,6 +7,7 @@ import { APP_NAME } from '@/lib/legal'
 export default function HomePage() {
   return (
     <main style={{ background: '#f4f5f9', color: '#161a2e', minHeight: '100dvh' }}>
+      <StandaloneRedirect />
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-5 py-12">
         <header className="flex flex-col gap-4">
           <div className="text-sm font-semibold tracking-wide" style={{ color: '#2536b8' }}>{APP_NAME}</div>

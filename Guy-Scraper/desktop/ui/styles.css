@@ -202,3 +202,4 @@
 .synergy .help-steps { margin: 0; padding-left: 20px; list-style: decimal; display: flex; flex-direction: column; gap: 10px; font-size: 14.5px; line-height: 1.55; color: var(--body); }
 .synergy .bookmark-link { display: inline-block; margin-top: 4px; padding: 8px 14px; border-radius: 10px; background: var(--blue-soft); color: var(--blue-dark); font-weight: 700; text-decoration: none; cursor: grab; border: 1px dashed var(--blue); }
 .synergy .help-or { font-size: 13.5px; color: var(--muted); }
+.synergy .help-note { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--body); }

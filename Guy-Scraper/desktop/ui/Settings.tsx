@@ -1,6 +1,6 @@
 import { syncedLabel } from './dates'
 import { isApp, isWeb } from './bridge'
-import { Header, ImportButton, SchoologyHelp } from './parts'
+import { Header, ImportButton, SchoologyHelp, signInLabel } from './parts'
 import { useDisplayName } from './prefs'
 import type { Synergy } from './useSynergy'
 
@@ -64,7 +64,7 @@ export function Settings({ app }: { app: Synergy }) {
           ) : (
             <>
               <button type="button" className={signedIn ? 'secondary' : 'primary'} disabled={app.syncing} onClick={() => void app.signIn()}>
-                {app.syncing ? 'Signing in…' : signedIn ? 'Sign in again or switch account' : 'Sign in to Schoology'}
+                {app.syncing ? 'Signing in…' : signedIn ? 'Sign in again or switch account' : signInLabel()}
               </button>
               {signedIn && <button type="button" className="secondary" onClick={() => void app.signOut()}>Sign out of Schoology</button>}
             </>

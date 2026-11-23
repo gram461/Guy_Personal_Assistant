@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from 'react'
-import { isInstalledApp, isIosDevice, synergy } from './bridge'
+import { isApp, isInstalledApp, isIosDevice, synergy } from './bridge'
 
 const PATHS = {
   sync: 'M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4',
@@ -65,6 +65,9 @@ export function Notice({ text, onDismiss, tone = 'info' }: { text: string; onDis
     </div>
   )
 }
+
+// In the phone app the sign-in happens in a Schoology window inside the app itself, so the button says so.
+export const signInLabel = () => (isApp() ? 'Sign into Schoology through the app' : 'Sign in to Schoology')
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024
 
@@ -163,7 +166,7 @@ export function SignInBanner({ busy, web, onSignIn, onText, onTooBig }: { busy: 
         <ImportButton busy={busy} onText={onText} onTooBig={onTooBig}>{busy ? 'Loading…' : 'Import grades file'}</ImportButton>
       ) : (
         <button type="button" className="primary" disabled={busy} onClick={onSignIn}>
-          {busy ? 'Signing in…' : 'Sign in to Schoology'}
+          {busy ? 'Signing in…' : signInLabel()}
         </button>
       )}
     </div>

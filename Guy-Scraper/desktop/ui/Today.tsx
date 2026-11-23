@@ -2,7 +2,7 @@ import type { DashboardAssignment } from '../../dashboard'
 import { dateKey, dayNumber, daysBetween, greeting, shortDate, syncedLabel, timeLabel, todayLong, weekdayShort } from './dates'
 import { classTitle } from './grades'
 import { isApp, isWeb } from './bridge'
-import { Empty, Header, SchoologyHelp, SyncButton } from './parts'
+import { Empty, Header, SchoologyHelp, SyncButton, signInLabel } from './parts'
 import { useDisplayName, useDoneAssignments } from './prefs'
 import type { Synergy } from './useSynergy'
 
@@ -71,7 +71,7 @@ export function Today({ app }: { app: Synergy }) {
             <>
               <p>Sign in to Schoology to bring your assignments and grades here. Your password is never saved, and everything is kept {isApp() ? 'on this phone' : 'in an encrypted file on this computer'}.</p>
               <button type="button" className="primary" disabled={app.syncing} onClick={() => void app.sync()}>
-                {app.syncing ? 'Syncing…' : 'Connect to Schoology'}
+                {app.syncing ? 'Syncing…' : isApp() ? signInLabel() : 'Connect to Schoology'}
               </button>
             </>
           )}

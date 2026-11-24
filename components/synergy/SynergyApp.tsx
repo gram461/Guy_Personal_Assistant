@@ -7,6 +7,7 @@ import '@/Guy-Scraper/desktop/ui/styles.css'
 import { createAppBridge } from './appBridge'
 import type { InAppBrowserLike } from './nativeSignIn'
 import { createGradesReceiver, TRUSTED_ORIGIN } from './receiveGrades'
+import InstallPrompt from './InstallPrompt'
 import { webBridge } from './webBridge'
 
 // The same screens the desktop app shows, running in the browser with the website's own bridge in place of the desktop program.
@@ -41,5 +42,10 @@ export default function SynergyApp() {
     return () => window.removeEventListener('message', listener)
   }, [])
 
-  return ready ? <App /> : null
+  return ready ? (
+    <>
+      <App />
+      <InstallPrompt />
+    </>
+  ) : null
 }

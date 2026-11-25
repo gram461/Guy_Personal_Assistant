@@ -37,7 +37,7 @@ Fix something on the website and both update, with no new store release. What th
 
 Run `npm run doctor` to see what this computer is missing.
 
-## Build steps (not done yet; waiting for the go-ahead)
+## Build steps (the iOS project in `ios/` is already generated and committed; only re-run `add:ios` if you delete it)
 
 ```bash
 npm install
@@ -57,3 +57,12 @@ npm run sync           # copies the config and plugins into both projects
   expect to explain it in the review notes.
 - **The app needs the website to be up**, because it loads Synergy from there. Use your own domain in `server.url` before publishing.
 - **No store listing yet:** screenshots, descriptions, an app icon and a privacy "nutrition label" are still to do.
+
+## iPhone: run it
+
+1. `cd mobile && npm install && npm run sync`
+2. `npm run open:ios`, pick your team under *Signing & Capabilities*, choose your iPhone, press Run.
+3. In the app, tap *Sign in to Schoology*. The in-app window opens, you sign in, and it closes by itself once grades are read.
+
+Native settings in this project: portrait only, `#f4f5f9` background, navigation limited to the Synergy domain
+(`allowNavigation` in `capacitor.config.json`; update it if you change the domain).

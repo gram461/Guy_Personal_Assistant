@@ -2,8 +2,14 @@
   "appId": "com.synergy.app",
   "appName": "Synergy",
   "webDir": "www",
+  "backgroundColor": "#f4f5f9",
   "server": {
     "url": "https://guy-personal-assistant.vercel.app/app",
-    "cleartext": false
+    "cleartext": false,
+    "allowNavigation": ["guy-personal-assistant.vercel.app"]
+  },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
   }
 }
